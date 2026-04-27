@@ -1,6 +1,7 @@
 import Fastify from "fastify";
+import { battleRoutes } from "./api/routes/battle.routes.js";
 import { healthRoutes } from "./api/routes/health.routes.js";
-import { sessionRoutes } from "./api/routes/sessions.routes.js";
+import { runRoutes } from "./api/routes/run.routes.js";
 
 export function buildApp() {
   const app = Fastify({
@@ -8,7 +9,8 @@ export function buildApp() {
   });
 
   app.register(healthRoutes);
-  app.register(sessionRoutes, { prefix: "/api" });
+  app.register(runRoutes);
+  app.register(battleRoutes);
 
   return app;
 }

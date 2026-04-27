@@ -1,56 +1,520 @@
-# the-tower-server
+# RPG Gauntlet — Server
 
-Minimal backend boilerplate for a turn-based RPG server.
+The server is the authoritative source for all game configuration and monster AI. It exposes two HTTP endpoints. The client calls them at defined moments in the game loop; the server never pushes data.
 
-## Stack
+---
 
-- Node.js
-- TypeScript
-- Fastify
-- PostgreSQL
-- dotenv
-- zod
+## Table of Contents
 
-## Install
+1. [Architecture Overview](#architecture-overview)
+2. [Endpoints](#endpoints)
+   - [GET /run/config](#get-runconfig)
+   - [GET /battle/monster-move](#get-battlemonster-move)
+3. [Data Schemas](#data-schemas)
+   - [RunConfig](#runconfig)
+   - [Monster](#monster)
+   - [Move](#move)
+   - [BattleState](#battlestate)
+   - [MonsterMoveResponse](#monstermoveresponse)
+4. [Game Systems](#game-systems)
+   - [Stats](#stats)
+   - [Move Types & Damage Formula](#move-types--damage-formula)
+   - [Hero Progression](#hero-progression)
+5. [Monster Roster](#monster-roster)
+6. [Full Moveset](#full-moveset)
+7. [Bot Behavior](#bot-behavior)
+8. [Error Handling](#error-handling)
+9. [Extension Points (Bonus Features)](#extension-points-bonus-features)
 
-```bash
-npm install
+---
+
+## Architecture Overview
+
+```
+Client                          Server
+  |                               |
+  |-- GET /run/config ----------->|  Called once when the player starts a new run.
+  |<-- RunConfig (5 monsters) ----|  Server returns the full encounter list.
+  |                               |
+  |  [Player picks a move]        |
+  |                               |
+  |-- GET /battle/monster-move -->|  Called every turn after the player acts.
+  |   (battle state as params)    |
+  |<-- MonsterMoveResponse -------|  Server picks and returns the monster's move.
+  |                               |
+  |  [Client applies both moves,  |
+  |   renders result, loops]      |
 ```
 
-## Configure
+The client owns all rendering, animation, and UI state. The server owns game configuration and monster decision-making. This separation means the Game Designer can adjust monster stats, movesets, and bot logic without a client rebuild.
 
-Create a local `.env` file from the example:
-
-```bash
-cp .env.example .env
-```
-
-Update `DATABASE_URL` so it points to your PostgreSQL database.
-
-## Run Migrations
-
-```bash
-npm run migrate
-```
-
-This creates the initial `sessions` table.
-
-## Development
-
-```bash
-npm run dev
-```
-
-The server starts on `PORT` from `.env` or `3000` by default.
-
-## Production Build
-
-```bash
-npm run build
-npm start
-```
+---
 
 ## Endpoints
 
-- `GET /health`
-- `POST /api/sessions`
+### GET /run/config
+
+Called **once** at the beginning of a run. Returns the complete encounter list the player will face, in order.
+
+**Request**
+
+No query parameters required.
+
+```
+GET /run/config
+```
+
+**Response** — `200 OK`
+
+```json
+{
+  "runId": "string",
+  "encounters": [
+    { ...Monster },
+    { ...Monster },
+    { ...Monster },
+    { ...Monster },
+    { ...Monster }
+  ],
+  "heroDefaults": {
+    "baseStats": { ...Stats },
+    "statsPerLevel": { ...Stats },
+    "moves": ["move_id", "move_id", "move_id", "move_id"]
+  },
+  "xpTable": [0, 100, 250, 450, 700],
+  "moveRegistry": {
+    "move_id": { ...Move },
+    "move_id": { ...Move }
+  }
+}
+```
+
+The `moveRegistry` contains every move that exists in the game — both hero defaults and all monster moves. The client uses this to look up move details anywhere in the UI without a separate request.
+
+`xpTable[i]` is the total XP required to reach level `i+1`. Index 0 is always 0 (the hero starts at level 1).
+
+---
+
+### GET /battle/monster-move
+
+Called **every turn**, after the player has selected and applied their move. The client sends the current battle state; the server responds with the move the monster will play this turn.
+
+**Request**
+
+Battle state is passed as a JSON query parameter (`state`) to keep the endpoint a clean GET and avoid CORS preflight on simple clients. For large payloads, the server may alternatively accept it as a POST body — document whichever you implement.
+
+```
+GET /battle/monster-move?state=<URL-encoded JSON BattleState>
+```
+
+Or as a POST body if query string length is a concern:
+
+```
+POST /battle/monster-move
+Content-Type: application/json
+
+{ ...BattleState }
+```
+
+**Response** — `200 OK`
+
+```json
+{
+  "moveId": "string",
+  "move": { ...Move }
+}
+```
+
+The client resolves damage/healing client-side using the returned move and the monster's stats (already known from `/run/config`). The server does not return a resolved damage number — this keeps the endpoint stateless and lets the client animate the result.
+
+---
+
+## Data Schemas
+
+All fields are required unless marked optional.
+
+### RunConfig
+
+| Field | Type | Description |
+|---|---|---|
+| `runId` | `string` | Unique identifier for this run. Used for save/resume (bonus feature). |
+| `encounters` | `Monster[]` | Exactly 5 monsters, ordered from first to last. |
+| `heroDefaults` | `HeroDefaults` | Starting stats and moveset for a fresh hero. |
+| `xpTable` | `number[]` | XP thresholds per level. Length defines max level. |
+| `moveRegistry` | `Record<string, Move>` | All moves in the game, keyed by move ID. |
+
+### HeroDefaults
+
+| Field | Type | Description |
+|---|---|---|
+| `baseStats` | `Stats` | Stats at level 1. |
+| `statsPerLevel` | `Stats` | Flat stat increase applied on each level-up. |
+| `moves` | `string[]` | Move IDs in the hero's starting equipped moveset (4 moves). |
+
+### Stats
+
+Applies to both heroes and monsters.
+
+| Field | Type | Description |
+|---|---|---|
+| `health` | `number` | Maximum hit points. |
+| `attack` | `number` | Scales physical move damage. |
+| `defense` | `number` | Reduces incoming physical damage. |
+| `magic` | `number` | Scales magic move damage and healing. |
+
+```json
+{
+  "health": 120,
+  "attack": 18,
+  "defense": 10,
+  "magic": 12
+}
+```
+
+### Monster
+
+| Field | Type | Description |
+|---|---|---|
+| `id` | `string` | Unique identifier (e.g. `"goblin_scout"`). |
+| `name` | `string` | Display name. |
+| `description` | `string` | Flavour text shown to the player. |
+| `stats` | `Stats` | Fixed stats. Monsters do not level up. |
+| `moves` | `string[]` | Move IDs this monster can use in battle. |
+| `learnableMoves` | `string[]` | Move IDs the hero can learn upon winning. One is chosen at random by the client. |
+| `xpReward` | `number` | XP awarded to the hero on victory. |
+| `spriteKey` | `string` | Asset key the client uses to render the monster sprite. |
+
+```json
+{
+  "id": "goblin_warrior",
+  "name": "Goblin Warrior",
+  "description": "A scrappy fighter who wins through cheap shots and reckless aggression.",
+  "stats": { "health": 70, "attack": 15, "defense": 7, "magic": 4 },
+  "moves": ["rusty_blade", "dirty_kick", "frenzy", "headbutt"],
+  "learnableMoves": ["rusty_blade", "dirty_kick", "frenzy", "headbutt"],
+  "xpReward": 80,
+  "spriteKey": "goblin_warrior"
+}
+```
+
+### Move
+
+| Field | Type | Description |
+|---|---|---|
+| `id` | `string` | Unique identifier (e.g. `"heavy_strike"`). |
+| `name` | `string` | Display name. |
+| `description` | `string` | Tooltip text explaining what the move does. |
+| `type` | `"physical" \| "magic" \| "status"` | Determines whether the move is physical damage, magic damage/healing, or a non-damage status move. |
+| `effect` | `"damage" \| "heal" \| "drain" \| "stat_modifier" \| "damage_and_stat_modifier"` | Main effect of the move. `statModifier` can be applied alone or together with damage. |
+| `target` | `"self" \| "opponent"` | Who is affected. |
+| `basePower` | `number` | Base value before stat scaling. Use `0` for pure buff/debuff moves. |
+| `statMultiplier` | `number` | Multiplier applied to the relevant stat before adding to base power. Use `0` for pure buff/debuff moves. |
+| `statModifier` | `StatModifier \| null` | Optional signed stat modifier. Positive `value` buffs the target; negative `value` debuffs the target. |
+| `hpCost` | `number \| null` | Optional HP cost paid by the move user before the effect resolves. |
+
+```json
+{
+  "id": "battle_cry",
+  "name": "Battle Cry",
+  "description": "Raises the user's Attack for two turns.",
+  "type": "status",
+  "effect": "stat_modifier",
+  "target": "self",
+  "basePower": 0,
+  "statMultiplier": 0,
+  "statModifier": {
+    "stat": "attack",
+    "value": 6,
+    "durationTurns": 2
+  },
+  "hpCost": null
+}
+```
+
+### StatModifier
+
+Used by moves that temporarily change `attack`, `defense`, or `magic`.
+
+| Field | Type | Description |
+|---|---|---|
+| `stat` | `"attack" \| "defense" \| "magic"` | The stat being modified. |
+| `value` | `number` | Signed flat modifier. Positive values increase the stat, negative values decrease it. |
+| `durationTurns` | `number` | How many turns the modifier lasts. |
+
+Examples:
+
+```json
+{
+  "stat": "magic",
+  "value": 6,
+  "durationTurns": 2
+}
+```
+
+```json
+{
+  "stat": "magic",
+  "value": -5,
+  "durationTurns": 2
+}
+```
+
+This means the implementation does not need a separate `operation` field. A buff is just a positive `value`; a debuff is just a negative `value`.
+
+### BattleState
+
+Sent by the client to `/battle/monster-move` each turn.
+
+| Field | Type | Description |
+|---|---|---|
+| `monsterId` | `string` | ID of the monster being fought. |
+| `monsterCurrentHp` | `number` | Monster's remaining HP this battle. |
+| `heroCurrentHp` | `number` | Hero's remaining HP this battle. |
+| `heroMaxHp` | `number` | Hero's maximum HP (for heal capping and AI context). |
+| `heroStats` | `Stats` | Hero's current resolved stats (post level-up). |
+| `turnNumber` | `number` | Current turn (1-indexed). |
+| `heroLastMoveId` | `string \| null` | The move the hero just played. `null` on turn 1. |
+| `monsterMoveHistory` | `string[]` | Ordered list of move IDs the monster has played so far this battle. |
+
+```json
+{
+  "monsterId": "dragon",
+  "monsterCurrentHp": 170,
+  "heroCurrentHp": 72,
+  "heroMaxHp": 180,
+  "heroStats": { "health": 180, "attack": 28, "defense": 18, "magic": 20 },
+  "turnNumber": 4,
+  "heroLastMoveId": "slash",
+  "monsterMoveHistory": ["flame_breath", "dragon_scales", "claw_swipe"]
+}
+```
+
+### MonsterMoveResponse
+
+| Field | Type | Description |
+|---|---|---|
+| `moveId` | `string` | The ID of the move the monster plays. Must be in the monster's `moves` array from config. |
+| `move` | `Move` | Full move object for convenience (client can also look this up in its local `moveRegistry`). |
+
+```json
+{
+  "moveId": "flame_breath",
+  "move": {
+    "id": "flame_breath",
+    "name": "Flame Breath",
+    "description": "Magic attack that deals heavy damage. Scales off Magic.",
+    "type": "magic",
+    "effect": "damage",
+    "target": "opponent",
+    "basePower": 30,
+    "statMultiplier": 1.3,
+    "statModifier": null,
+    "hpCost": null
+  }
+}
+```
+
+---
+
+## Game Systems
+
+### Stats
+
+Every character has four stats:
+
+| Stat | Role |
+|---|---|
+| `health` | Hit points. Reach 0 and you lose the fight. |
+| `attack` | Scales physical move damage. |
+| `defense` | Reduces incoming physical damage. |
+| `magic` | Scales magic move damage and healing. |
+
+Monsters have fixed stats defined in the server config. The hero's stats grow on level-up.
+
+### Move Types & Damage Formula
+
+**Physical damage:**
+
+```
+damage = (move.basePower + attacker.attack * move.statMultiplier) - target.defense
+damage = max(1, damage)   // Always deal at least 1 damage
+```
+
+**Magic damage:**
+
+```
+damage = move.basePower + attacker.magic * move.statMultiplier
+// Defense does not apply to magic damage
+```
+
+**Healing:**
+
+```
+heal = move.basePower + caster.magic * move.statMultiplier
+newHp = min(caster.maxHp, caster.currentHp + heal)
+```
+
+**Drain:**
+
+```
+damage = move.basePower + attacker.magic * move.statMultiplier
+target.currentHp = max(0, target.currentHp - damage)
+attacker.currentHp = min(attacker.maxHp, attacker.currentHp + damage)
+```
+
+**Buffs and debuffs:**
+
+```
+modifiedStat = originalStat + move.statModifier.value
+modifier expires after move.statModifier.durationTurns
+```
+
+Positive modifier values are buffs. Negative modifier values are debuffs. Buff and debuff moves last **two turns** in the current move set. The client resolves all of this. The server only returns which move the monster plays.
+
+### Hero Progression
+
+- The hero starts at **Level 1** with `heroDefaults.baseStats` and `heroDefaults.moves`.
+- Each battle awards `monster.xpReward` XP on victory.
+- When accumulated XP reaches the threshold for the next level (`xpTable[level]`), the hero levels up.
+- On level-up, each stat increases by the corresponding value in `heroDefaults.statsPerLevel`.
+- The hero can equip up to **4 moves** at a time, chosen from all moves they have learned.
+- After winning a battle, one of `monster.learnableMoves` is selected at random and added to the hero's learned pool. The player then decides whether to equip it before the next fight.
+
+---
+
+## Monster Roster
+
+The five encounters are ordered by increasing difficulty. Stats and movesets are tunable in the server config without a client rebuild.
+
+| # | Name | Role | Design Intent |
+|---|---|---|---|
+| 1 | **Goblin Warrior** | Physical opener | Introduces physical damage, Attack buffs, and Defense debuffs. |
+| 2 | **Giant Spider** | Physical control | Uses Defense buffs and Defense-lowering attacks to punish long fights. |
+| 3 | **Goblin Mage** | Magic specialist | Introduces Magic scaling, Magic buffs, and Magic debuffs. |
+| 4 | **Witch** | Drain caster | Uses heavy magic damage, self-healing through damage, and Attack debuffs. |
+| 5 | **Dragon** | Final boss | Mixed physical and magic threat with Attack debuffs and Defense buffs. |
+
+> **Tuning note:** Adjust `xpReward`, stats, and movesets in the config until a hero on a clean first run can realistically beat encounter 1 at level 1 and will need level 3–4 to reliably beat encounter 5.
+
+---
+
+## Full Moveset
+
+All moves are defined in `moveRegistry` returned by `/run/config`. Below is the intended base set. Exact numbers should be tuned during playtesting.
+
+### Hero Default Moves (Knight)
+
+| ID | Name | Type | Effect | Target | Base Power | Stat Mult | Stat Modifier | HP Cost | Notes |
+|---|---|---|---|---|---|---|---|---|---|
+| `slash` | Slash | Physical | damage | opponent | 15 | 1.0 | — | — | Moderate physical damage. Scales off Attack and is reduced by Defense. |
+| `shield_up` | Shield Up | Status | stat_modifier | self | 0 | 0 | `{ stat: "defense", value: 6, durationTurns: 2 }` | — | No damage; raises the knight's Defense. |
+| `battle_cry` | Battle Cry | Status | stat_modifier | self | 0 | 0 | `{ stat: "attack", value: 6, durationTurns: 2 }` | — | No damage; raises the knight's Attack. |
+| `second_wind` | Second Wind | Magic | heal | self | 18 | 0.8 | — | — | Moderate heal. Scales off Magic. |
+
+### Witch Moves
+
+| ID | Name | Type | Effect | Target | Base Power | Stat Mult | Stat Modifier | HP Cost | Notes |
+|---|---|---|---|---|---|---|---|---|---|
+| `shadow_bolt` | Shadow Bolt | Magic | damage | opponent | 28 | 1.2 | — | — | Heavy magic damage. Scales off Magic. |
+| `drain_life` | Drain Life | Magic | drain | opponent | 10 | 0.7 | — | — | Light magic damage and heals the user for the same amount. |
+| `curse` | Curse | Status | stat_modifier | opponent | 0 | 0 | `{ stat: "attack", value: -6, durationTurns: 2 }` | — | Lowers the target's Attack. |
+| `dark_pact` | Dark Pact | Status | stat_modifier | self | 0 | 0 | `{ stat: "magic", value: 8, durationTurns: 2 }` | 10 | Raises Magic at the cost of the user's HP. |
+
+### Giant Spider Moves
+
+| ID | Name | Type | Effect | Target | Base Power | Stat Mult | Stat Modifier | HP Cost | Notes |
+|---|---|---|---|---|---|---|---|---|---|
+| `bite` | Bite | Physical | damage | opponent | 14 | 1.0 | — | — | Moderate physical damage. Scales off Attack and is reduced by Defense. |
+| `web_throw` | Web Throw | Physical | damage_and_stat_modifier | opponent | 8 | 0.7 | `{ stat: "defense", value: -5, durationTurns: 2 }` | — | Light physical damage and lowers target Defense. |
+| `pounce` | Pounce | Physical | damage | opponent | 26 | 1.2 | — | — | Heavy physical damage. Scales off Attack and is reduced by Defense. |
+| `skitter` | Skitter | Status | stat_modifier | self | 0 | 0 | `{ stat: "defense", value: 6, durationTurns: 2 }` | — | No damage; raises the spider's Defense. |
+
+### Dragon Moves
+
+| ID | Name | Type | Effect | Target | Base Power | Stat Mult | Stat Modifier | HP Cost | Notes |
+|---|---|---|---|---|---|---|---|---|---|
+| `flame_breath` | Flame Breath | Magic | damage | opponent | 30 | 1.3 | — | — | Heavy magic damage. Scales off Magic. |
+| `claw_swipe` | Claw Swipe | Physical | damage | opponent | 18 | 1.0 | — | — | Moderate physical damage. Scales off Attack and is reduced by Defense. |
+| `intimidate` | Intimidate | Status | stat_modifier | opponent | 0 | 0 | `{ stat: "attack", value: -6, durationTurns: 2 }` | — | No damage; lowers target Attack. |
+| `dragon_scales` | Dragon Scales | Status | stat_modifier | self | 0 | 0 | `{ stat: "defense", value: 8, durationTurns: 2 }` | — | No damage; raises user Defense. |
+
+### Goblin Warrior Moves
+
+| ID | Name | Type | Effect | Target | Base Power | Stat Mult | Stat Modifier | HP Cost | Notes |
+|---|---|---|---|---|---|---|---|---|---|
+| `rusty_blade` | Rusty Blade | Physical | damage | opponent | 14 | 1.0 | — | — | Moderate physical damage. Scales off Attack and is reduced by Defense. |
+| `dirty_kick` | Dirty Kick | Physical | damage_and_stat_modifier | opponent | 8 | 0.7 | `{ stat: "defense", value: -5, durationTurns: 2 }` | — | Light physical damage and lowers target Defense. |
+| `frenzy` | Frenzy | Status | stat_modifier | self | 0 | 0 | `{ stat: "attack", value: 6, durationTurns: 2 }` | — | No damage; raises user Attack. |
+| `headbutt` | Headbutt | Physical | damage | opponent | 26 | 1.2 | — | — | Heavy physical damage. Scales off Attack and is reduced by Defense. |
+
+### Goblin Mage Moves
+
+| ID | Name | Type | Effect | Target | Base Power | Stat Mult | Stat Modifier | HP Cost | Notes |
+|---|---|---|---|---|---|---|---|---|---|
+| `firebolt` | Firebolt | Magic | damage | opponent | 18 | 1.0 | — | — | Moderate magic damage. Scales off Magic. |
+| `arcane_surge` | Arcane Surge | Status | stat_modifier | self | 0 | 0 | `{ stat: "magic", value: 6, durationTurns: 2 }` | — | No damage; raises user Magic. |
+| `mana_drain` | Mana Drain | Magic | damage_and_stat_modifier | opponent | 10 | 0.7 | `{ stat: "magic", value: -5, durationTurns: 2 }` | — | Light magic damage and lowers target Magic. |
+| `hex_shield` | Hex Shield | Status | stat_modifier | self | 0 | 0 | `{ stat: "defense", value: 6, durationTurns: 2 }` | — | No damage; raises user Defense. |
+
+---
+
+## Bot Behavior
+
+The default bot is **random weighted selection**. On each turn, the server picks from the monster's `moves` array with equal probability. This is intentionally simple for the prototype.
+
+The bot selection logic lives entirely in `/battle/monster-move`, so it can be changed without touching the client.
+
+**Current algorithm (v1 — random):**
+
+```
+selectedMove = random choice from monster.moves
+```
+
+**Planned algorithm (v2 — situational, bonus feature #8):**
+
+The `BattleState` payload already includes everything needed for conditional logic:
+
+- `monsterCurrentHp` — prioritize healing moves when HP is below a threshold (e.g. < 30%)
+- `heroLastMoveId` — counter physical with physical; counter magic with high magic output
+- `turnNumber` — open with a specific move (e.g. always buff on turn 1)
+- `monsterMoveHistory` — avoid repeating the same move too many times in a row
+
+Switching from v1 to v2 is a server-only change. The client calls the same endpoint and gets the same response shape.
+
+---
+
+## Error Handling
+
+| Scenario | HTTP Status | Response |
+|---|---|---|
+| Invalid or missing `state` param | `400` | `{ "error": "invalid_battle_state", "message": "..." }` |
+| Unknown `monsterId` in state | `404` | `{ "error": "monster_not_found", "message": "..." }` |
+| Internal server error | `500` | `{ "error": "server_error", "message": "..." }` |
+
+All error responses use the shape:
+
+```json
+{
+  "error": "error_code",
+  "message": "Human-readable description"
+}
+```
+
+---
+
+## Extension Points (Bonus Features)
+
+The schema is designed to accommodate the Game Designer's backlog with minimal breaking changes.
+
+| Feature | What to add |
+|---|---|
+| **Move descriptions (#1)** | Already in `Move.description`. Client just needs to wire up the hover tooltip. |
+| **Attribute choices on level-up (#2)** | Add an optional `levelUpChoices: number` field to `heroDefaults`. Server returns stat options; client presents them. |
+| **Status effects (#3)** | Buffs and debuffs already use `statModifier`. For poison, burn, stun, etc., add `statusEffect?: { type: string, duration: number, value: number }` to `Move`. |
+| **Resource costs (#4)** | `hpCost` already supports moves like Dark Pact. Add `manaCost?: number`, `mana`, and `manaRegen` if mana becomes part of the game. |
+| **Save & Exit (#5)** | Store `runId` + hero state in persistent storage server-side. Add `GET /run/{runId}` to resume. |
+| **Battle log (#6)** | `MonsterMoveResponse` can include an optional `logEntry: string` the server generates from the move result. |
+| **Smarter bot (#8)** | Change the selection logic inside `/battle/monster-move` only. Schema unchanged. |
+| **Items (#9)** | Add `itemDrops?: Item[]` to `Monster`. Add `Item` schema alongside `Move`. |
+| **Non-linear map (#12)** | Change `encounters` from `Monster[]` to a graph structure: `nodes: MonsterNode[]`, `edges: { from: string, to: string }[]`. |
+| **Hero classes (#15)** | Add `GET /hero/classes` returning multiple `HeroDefaults` variants. |
