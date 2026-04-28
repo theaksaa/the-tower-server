@@ -48,27 +48,72 @@ No params, no body.
       "spriteKey": "goblin_warrior"
     }
   ],
-  "heroDefaults": {
-    "baseStats": {
-      "health": 120,
-      "attack": 18,
-      "defense": 10,
-      "magic": 12
+  "heroes": [
+    {
+      "id": "knight",
+      "name": "Knight",
+      "description": "A durable frontline fighter with steady offense and self-sustain.",
+      "spriteKey": "hero_knight",
+      "baseStats": {
+        "health": 120,
+        "attack": 18,
+        "defense": 10,
+        "magic": 12
+      },
+      "statsPerLevel": {
+        "health": 18,
+        "attack": 4,
+        "defense": 3,
+        "magic": 3
+      },
+      "moves": ["slash", "shield_up", "battle_cry", "second_wind"]
     },
-    "statsPerLevel": {
-      "health": 18,
-      "attack": 4,
-      "defense": 3,
-      "magic": 3
+    {
+      "id": "berserker",
+      "name": "Berserker",
+      "description": "An aggressive bruiser with bigger physical scaling and lighter defenses.",
+      "spriteKey": "hero_berserker",
+      "baseStats": {
+        "health": 132,
+        "attack": 22,
+        "defense": 7,
+        "magic": 8
+      },
+      "statsPerLevel": {
+        "health": 20,
+        "attack": 5,
+        "defense": 2,
+        "magic": 2
+      },
+      "moves": ["slash", "battle_cry", "headbutt", "second_wind"]
     },
-    "moves": ["slash", "shield_up", "battle_cry", "second_wind"]
-  },
+    {
+      "id": "spellblade",
+      "name": "Spellblade",
+      "description": "A hybrid duelist that mixes weapon strikes with flexible magic utility.",
+      "spriteKey": "hero_spellblade",
+      "baseStats": {
+        "health": 108,
+        "attack": 15,
+        "defense": 9,
+        "magic": 18
+      },
+      "statsPerLevel": {
+        "health": 16,
+        "attack": 3,
+        "defense": 2,
+        "magic": 4
+      },
+      "moves": ["slash", "firebolt", "arcane_surge", "second_wind"]
+    }
+  ],
   "xpTable": [0, 100, 250, 450, 700],
   "moveRegistry": {
     "slash": {
       "id": "slash",
       "name": "Slash",
       "description": "Moderate physical damage.",
+      "spriteKey": "slash",
       "type": "physical",
       "effect": "damage",
       "target": "opponent",
@@ -85,7 +130,9 @@ No params, no body.
 
 - store `runId` if you want a run identifier on the client
 - use `encounters` as the battle order
-- initialize the hero from `heroDefaults`
+- let the player pick one entry from `heroes`
+- initialize the hero from the selected hero's `baseStats` and `moves`
+- use `hero.spriteKey` and `move.spriteKey` to resolve art/icons in the client
 - use `xpTable` for level-up thresholds
 - use `moveRegistry[moveId]` whenever you need full move details in battle UI, tooltips, or resolution logic
 
@@ -130,6 +177,7 @@ GET /battle/monster-move?state=<url-encoded-json>
     "id": "claw_swipe",
     "name": "Claw Swipe",
     "description": "Moderate physical damage.",
+    "spriteKey": "claw_swipe",
     "type": "physical",
     "effect": "damage",
     "target": "opponent",
@@ -207,6 +255,7 @@ type Move = {
   id: string;
   name: string;
   description: string;
+  spriteKey: string;
   type: "physical" | "magic" | "status";
   effect:
     | "damage"
@@ -237,17 +286,27 @@ type Monster = {
 };
 ```
 
+### `HeroDefaults`
+
+```ts
+type HeroDefaults = {
+  id: string;
+  name: string;
+  description: string;
+  spriteKey: string;
+  baseStats: Stats;
+  statsPerLevel: Stats;
+  moves: string[];
+};
+```
+
 ### `RunConfig`
 
 ```ts
 type RunConfig = {
   runId: string;
   encounters: Monster[];
-  heroDefaults: {
-    baseStats: Stats;
-    statsPerLevel: Stats;
-    moves: string[];
-  };
+  heroes: HeroDefaults[];
   xpTable: number[];
   moveRegistry: Record<string, Move>;
 };
@@ -276,7 +335,8 @@ The server does not calculate final battle results. The client should:
 - track current HP for both sides
 - track temporary buffs/debuffs and remove them after `durationTurns`
 - award `xpReward` after a win
-- apply level-ups using `xpTable` and `heroDefaults.statsPerLevel`
+- store which hero was selected for the run
+- apply level-ups using `xpTable` and the selected hero's `statsPerLevel`
 - pick one move from `learnableMoves` after each victory if that is part of your flow
 - keep the equipped move list to a max of 4 moves
 

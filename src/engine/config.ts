@@ -6,6 +6,10 @@ import type {
   Stats
 } from "./types.js";
 
+type MoveDefinition = Omit<Move, "spriteKey"> & {
+  spriteKey?: string;
+};
+
 const createStats = (
   health: number,
   attack: number,
@@ -18,15 +22,54 @@ const createStats = (
   magic
 });
 
-export const heroDefaults: HeroDefaults = {
+const createMoveRegistry = (
+  definitions: Record<string, MoveDefinition>
+): MoveRegistry =>
+  Object.fromEntries(
+    Object.entries(definitions).map(([moveId, move]) => [
+      moveId,
+      {
+        ...move,
+        spriteKey: move.spriteKey ?? moveId
+      }
+    ])
+  );
+
+const knightHero: HeroDefaults = {
+  id: "knight",
+  name: "Knight",
+  description: "A durable frontline fighter with steady offense and self-sustain.",
+  spriteKey: "knight",
   baseStats: createStats(120, 18, 10, 12),
   statsPerLevel: createStats(18, 4, 3, 3),
   moves: ["slash", "shield_up", "battle_cry", "second_wind"]
 };
 
+export const heroes: HeroDefaults[] = [
+  knightHero,
+  {
+    id: "berserker",
+    name: "Berserker",
+    description: "An aggressive bruiser with bigger physical scaling and lighter defenses.",
+    spriteKey: "solider",
+    baseStats: createStats(132, 22, 7, 8),
+    statsPerLevel: createStats(20, 5, 2, 2),
+    moves: ["slash", "battle_cry", "headbutt", "second_wind"]
+  },
+  {
+    id: "spellblade",
+    name: "Spellblade",
+    description: "A hybrid duelist that mixes weapon strikes with flexible magic utility.",
+    spriteKey: "priest",
+    baseStats: createStats(108, 15, 9, 18),
+    statsPerLevel: createStats(16, 3, 2, 4),
+    moves: ["slash", "firebolt", "arcane_surge", "second_wind"]
+  }
+];
+
 export const xpTable = [0, 100, 250, 450, 700];
 
-export const moveRegistry: MoveRegistry = {
+export const moveRegistry: MoveRegistry = createMoveRegistry({
   slash: {
     id: "slash",
     name: "Slash",
@@ -367,7 +410,7 @@ export const moveRegistry: MoveRegistry = {
     },
     hpCost: null
   }
-};
+});
 
 export const encounters: Monster[] = [
   {
@@ -379,7 +422,7 @@ export const encounters: Monster[] = [
     moves: ["rusty_blade", "dirty_kick", "frenzy", "headbutt"],
     learnableMoves: ["rusty_blade", "dirty_kick", "frenzy", "headbutt"],
     xpReward: 80,
-    spriteKey: "goblin_warrior"
+    spriteKey: "orc"
   },
   {
     id: "giant_spider",
@@ -389,7 +432,7 @@ export const encounters: Monster[] = [
     moves: ["bite", "web_throw", "pounce", "skitter"],
     learnableMoves: ["bite", "web_throw", "pounce", "skitter"],
     xpReward: 110,
-    spriteKey: "giant_spider"
+    spriteKey: "orc_rider"
   },
   {
     id: "goblin_mage",
@@ -399,7 +442,7 @@ export const encounters: Monster[] = [
     moves: ["firebolt", "arcane_surge", "mana_drain", "hex_shield"],
     learnableMoves: ["firebolt", "arcane_surge", "mana_drain", "hex_shield"],
     xpReward: 140,
-    spriteKey: "goblin_mage"
+    spriteKey: "armored_orc"
   },
   {
     id: "witch",
@@ -409,7 +452,7 @@ export const encounters: Monster[] = [
     moves: ["shadow_bolt", "drain_life", "curse", "dark_pact"],
     learnableMoves: ["shadow_bolt", "drain_life", "curse", "dark_pact"],
     xpReward: 180,
-    spriteKey: "witch"
+    spriteKey: "wizard"
   },
   {
     id: "dragon",
@@ -419,7 +462,7 @@ export const encounters: Monster[] = [
     moves: ["flame_breath", "claw_swipe", "intimidate", "dragon_scales"],
     learnableMoves: ["flame_breath", "claw_swipe", "intimidate", "dragon_scales"],
     xpReward: 250,
-    spriteKey: "dragon"
+    spriteKey: "werebear"
   }
 ];
 

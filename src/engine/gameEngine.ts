@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { encounters, getMove, heroDefaults, moveRegistry, xpTable } from "./config.js";
+import { encounters, getMove, heroes, moveRegistry, xpTable } from "./config.js";
 import type { BattleState, Monster, MonsterMoveResponse, RunConfig } from "./types.js";
 import { createId } from "../utils/id.js";
 
@@ -49,7 +49,7 @@ export function createGameEngine(): GameEngine {
       return {
         runId: createId(),
         encounters,
-        heroDefaults,
+        heroes,
         xpTable,
         moveRegistry
       };

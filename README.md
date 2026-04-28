@@ -76,11 +76,17 @@ GET /run/config
     { ...Monster },
     { ...Monster }
   ],
-  "heroDefaults": {
-    "baseStats": { ...Stats },
-    "statsPerLevel": { ...Stats },
-    "moves": ["move_id", "move_id", "move_id", "move_id"]
-  },
+  "heroes": [
+    {
+      "id": "knight",
+      "name": "Knight",
+      "description": "A durable frontline fighter with steady offense and self-sustain.",
+      "spriteKey": "hero_knight",
+      "baseStats": { ...Stats },
+      "statsPerLevel": { ...Stats },
+      "moves": ["move_id", "move_id", "move_id", "move_id"]
+    }
+  ],
   "xpTable": [0, 100, 250, 450, 700],
   "moveRegistry": {
     "move_id": { ...Move },
@@ -139,7 +145,7 @@ All fields are required unless marked optional.
 |---|---|---|
 | `runId` | `string` | Unique identifier for this run. Used for save/resume (bonus feature). |
 | `encounters` | `Monster[]` | Exactly 5 monsters, ordered from first to last. |
-| `heroDefaults` | `HeroDefaults` | Starting stats and moveset for a fresh hero. |
+| `heroes` | `HeroDefaults[]` | Selectable hero definitions the client can offer at the start of a run. |
 | `xpTable` | `number[]` | XP thresholds per level. Length defines max level. |
 | `moveRegistry` | `Record<string, Move>` | All moves in the game, keyed by move ID. |
 
@@ -147,6 +153,10 @@ All fields are required unless marked optional.
 
 | Field | Type | Description |
 |---|---|---|
+| `id` | `string` | Unique identifier for the hero option. |
+| `name` | `string` | Display name shown in hero selection UI. |
+| `description` | `string` | Short archetype summary for the client. |
+| `spriteKey` | `string` | Asset key the client uses to render the hero portrait or sprite. |
 | `baseStats` | `Stats` | Stats at level 1. |
 | `statsPerLevel` | `Stats` | Flat stat increase applied on each level-up. |
 | `moves` | `string[]` | Move IDs in the hero's starting equipped moveset (4 moves). |
@@ -204,6 +214,7 @@ Applies to both heroes and monsters.
 | `id` | `string` | Unique identifier (e.g. `"heavy_strike"`). |
 | `name` | `string` | Display name. |
 | `description` | `string` | Tooltip text explaining what the move does. |
+| `spriteKey` | `string` | Asset key the client uses for the move icon or card art. |
 | `type` | `"physical" \| "magic" \| "status"` | Determines whether the move is physical damage, magic damage/healing, or a non-damage status move. |
 | `effect` | `"damage" \| "heal" \| "drain" \| "stat_modifier" \| "damage_and_stat_modifier"` | Main effect of the move. `statModifier` can be applied alone or together with damage. |
 | `target` | `"self" \| "opponent"` | Who is affected. |
@@ -373,10 +384,11 @@ Positive modifier values are buffs. Negative modifier values are debuffs. Buff a
 
 ### Hero Progression
 
-- The hero starts at **Level 1** with `heroDefaults.baseStats` and `heroDefaults.moves`.
+- The client selects one entry from `heroes` at the start of the run.
+- The chosen hero starts at **Level 1** with that hero's `baseStats` and `moves`.
 - Each battle awards `monster.xpReward` XP on victory.
 - When accumulated XP reaches the threshold for the next level (`xpTable[level]`), the hero levels up.
-- On level-up, each stat increases by the corresponding value in `heroDefaults.statsPerLevel`.
+- On level-up, each stat increases by the corresponding value in the chosen hero's `statsPerLevel`.
 - The hero can equip up to **4 moves** at a time, chosen from all moves they have learned.
 - After winning a battle, one of `monster.learnableMoves` is selected at random and added to the hero's learned pool. The player then decides whether to equip it before the next fight.
 
@@ -509,7 +521,7 @@ The schema is designed to accommodate the Game Designer's backlog with minimal b
 | Feature | What to add |
 |---|---|
 | **Move descriptions (#1)** | Already in `Move.description`. Client just needs to wire up the hover tooltip. |
-| **Attribute choices on level-up (#2)** | Add an optional `levelUpChoices: number` field to `heroDefaults`. Server returns stat options; client presents them. |
+| **Attribute choices on level-up (#2)** | Add an optional `levelUpChoices: number` field to each hero definition. Server returns stat options; client presents them. |
 | **Status effects (#3)** | Buffs and debuffs already use `statModifier`. For poison, burn, stun, etc., add `statusEffect?: { type: string, duration: number, value: number }` to `Move`. |
 | **Resource costs (#4)** | `hpCost` already supports moves like Dark Pact. Add `manaCost?: number`, `mana`, and `manaRegen` if mana becomes part of the game. |
 | **Save & Exit (#5)** | Store `runId` + hero state in persistent storage server-side. Add `GET /run/{runId}` to resume. |
@@ -517,4 +529,4 @@ The schema is designed to accommodate the Game Designer's backlog with minimal b
 | **Smarter bot (#8)** | Change the selection logic inside `/battle/monster-move` only. Schema unchanged. |
 | **Items (#9)** | Add `itemDrops?: Item[]` to `Monster`. Add `Item` schema alongside `Move`. |
 | **Non-linear map (#12)** | Change `encounters` from `Monster[]` to a graph structure: `nodes: MonsterNode[]`, `edges: { from: string, to: string }[]`. |
-| **Hero classes (#15)** | Add `GET /hero/classes` returning multiple `HeroDefaults` variants. |
+| **Hero classes (#15)** | Already covered by the `heroes` array in `GET /run/config`; expand it with more variants as needed. |

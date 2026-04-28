@@ -28,6 +28,7 @@ export type Move = {
   id: string;
   name: string;
   description: string;
+  spriteKey: string;
   type: MoveType;
   effect: MoveEffect;
   target: MoveTarget;
@@ -51,6 +52,10 @@ export type Monster = {
 };
 
 export type HeroDefaults = {
+  id: string;
+  name: string;
+  description: string;
+  spriteKey: string;
   baseStats: Stats;
   statsPerLevel: Stats;
   moves: string[];
@@ -59,7 +64,7 @@ export type HeroDefaults = {
 export type RunConfig = {
   runId: string;
   encounters: Monster[];
-  heroDefaults: HeroDefaults;
+  heroes: HeroDefaults[];
   xpTable: number[];
   moveRegistry: MoveRegistry;
 };
