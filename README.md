@@ -87,7 +87,10 @@ GET /run/config
       "moves": ["move_id", "move_id", "move_id", "move_id"]
     }
   ],
-  "xpTable": [0, 100, 250, 450, 700],
+  "levelProgression": {
+    "baseXpForNextLevel": 100,
+    "additionalXpPerLevel": 50
+  },
   "xpRewardScaling": {
     "multiplierPerKill": 0.95,
     "minimumReward": 25
@@ -130,7 +133,7 @@ The `moveRegistry` contains every move that exists in the game — both hero def
 
 `shopItems` contains permanent stat upgrades and move unlocks for the client shop. Move shop entries always reference a valid move in `moveRegistry`, and `repeatable` tells the client whether the player can buy that item again.
 
-`xpTable[i]` is the total XP required to reach level `i+1`. Index 0 is always 0 (the hero starts at level 1).
+`levelProgression` defines infinite hero leveling. XP needed to go from level `N` to level `N + 1` is `baseXpForNextLevel + (N - 1) * additionalXpPerLevel`.
 
 ---
 
@@ -179,7 +182,7 @@ All fields are required unless marked optional.
 | `runId` | `string` | Unique identifier for this run. Used for save/resume (bonus feature). |
 | `encounters` | `Monster[]` | Exactly 5 monsters, ordered from first to last. |
 | `heroes` | `HeroDefaults[]` | Selectable hero definitions the client can offer at the start of a run. |
-| `xpTable` | `number[]` | XP thresholds per level. Length defines max level. |
+| `levelProgression` | `LevelProgression` | Infinite XP progression config for calculating the next level requirement. |
 | `xpRewardScaling` | `XpRewardScaling` | Global settings for reducing monster XP rewards after each kill. |
 | `coinRewardScaling` | `CoinRewardScaling` | Global settings for reducing monster coin rewards after each kill. |
 | `shopItems` | `ShopItem[]` | Shop entries for permanent stat upgrades and move unlocks. |
@@ -296,6 +299,21 @@ const xpReward = Math.max(
       runConfig.xpRewardScaling.multiplierPerKill ** monstersKilledSoFar
   )
 );
+```
+
+### LevelProgression
+
+| Field | Type | Description |
+|---|---|---|
+| `baseXpForNextLevel` | `number` | XP needed to go from level 1 to level 2. |
+| `additionalXpPerLevel` | `number` | Extra XP added to each later level requirement. |
+
+Suggested client formula:
+
+```ts
+const xpNeededForNextLevel =
+  runConfig.levelProgression.baseXpForNextLevel +
+  (currentLevel - 1) * runConfig.levelProgression.additionalXpPerLevel;
 ```
 
 ### Move
@@ -479,7 +497,7 @@ Positive modifier values are buffs. Negative modifier values are debuffs. Buff a
 - The chosen hero starts at **Level 1** with that hero's `baseStats` and `moves`.
 - Each battle awards XP. Start from `monster.xpReward`, then reduce it by `xpRewardScaling.multiplierPerKill` for each monster already killed in the run, never going below `xpRewardScaling.minimumReward`.
 - Each battle also awards coins. Start from `monster.coinReward`, then reduce it by `coinRewardScaling.multiplierPerKill` for each monster already killed in the run, never going below `coinRewardScaling.minimumReward`.
-- When accumulated XP reaches the threshold for the next level (`xpTable[level]`), the hero levels up.
+- When accumulated XP reaches the current next-level requirement from `levelProgression`, the hero levels up.
 - On level-up, each stat increases by the corresponding value in the chosen hero's `statsPerLevel`.
 - The hero can equip up to **4 moves** at a time, chosen from all moves they have learned.
 - After winning a battle, one of `monster.learnableMoves` is selected at random and added to the hero's learned pool. The player then decides whether to equip it before the next fight.

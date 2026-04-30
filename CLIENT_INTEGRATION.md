@@ -108,7 +108,10 @@ No params, no body.
       "moves": ["slash", "firebolt", "arcane_surge", "second_wind"]
     }
   ],
-  "xpTable": [0, 100, 250, 450, 700],
+  "levelProgression": {
+    "baseXpForNextLevel": 100,
+    "additionalXpPerLevel": 50
+  },
   "xpRewardScaling": {
     "multiplierPerKill": 0.95,
     "minimumReward": 25
@@ -165,7 +168,7 @@ No params, no body.
 - let the player pick one entry from `heroes`
 - initialize the hero from the selected hero's `baseStats` and `moves`
 - use `hero.spriteKey` and `move.spriteKey` to resolve art/icons in the client
-- use `xpTable` for level-up thresholds
+- use `levelProgression` to calculate how much XP is needed for each next level with no max level cap
 - use `xpRewardScaling` with each monster's `xpReward` to calculate how much XP a kill gives as the run goes on
 - use `coinRewardScaling` with each monster's `coinReward` to calculate how much gold a kill gives as the run goes on
 - use `shopItems` to render the shop and apply permanent stat boosts or move unlocks
@@ -342,6 +345,19 @@ type XpRewardScaling = {
 };
 ```
 
+### `LevelProgression`
+
+```ts
+type LevelProgression = {
+  baseXpForNextLevel: number;
+  additionalXpPerLevel: number;
+};
+```
+
+- XP needed to go from level `N` to level `N + 1`:
+  `baseXpForNextLevel + (N - 1) * additionalXpPerLevel`
+- with the current config, the next-level costs are `100, 150, 200, 250, 300...`
+
 ### `HeroDefaults`
 
 ```ts
@@ -393,7 +409,7 @@ type RunConfig = {
   runId: string;
   encounters: Monster[];
   heroes: HeroDefaults[];
-  xpTable: number[];
+  levelProgression: LevelProgression;
   xpRewardScaling: XpRewardScaling;
   coinRewardScaling: CoinRewardScaling;
   shopItems: ShopItem[];
@@ -426,7 +442,7 @@ The server does not calculate final battle results. The client should:
 - award XP after a win with a formula like `Math.max(minimumReward, Math.round(monster.xpReward * multiplierPerKill ** monstersKilledSoFar))`
 - award coins after a win with a formula like `Math.max(minimumReward, Math.round(monster.coinReward * multiplierPerKill ** monstersKilledSoFar))`
 - store which hero was selected for the run
-- apply level-ups using `xpTable` and the selected hero's `statsPerLevel`
+- apply level-ups using `levelProgression` and the selected hero's `statsPerLevel`
 - apply purchased stat items permanently to the hero's tracked stats
 - prevent re-buying any `shopItems` where `repeatable` is `false`
 - for move purchases, unlock the referenced `moveId` from `moveRegistry`

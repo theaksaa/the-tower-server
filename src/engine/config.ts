@@ -1,6 +1,7 @@
 import type {
   CoinRewardScaling,
   HeroDefaults,
+  LevelProgression,
   Monster,
   Move,
   MoveRegistry,
@@ -71,7 +72,10 @@ export const heroes: HeroDefaults[] = [
   }
 ];
 
-export const xpTable = [0, 100, 250, 450, 700];
+export const levelProgression: LevelProgression = {
+  baseXpForNextLevel: 100,
+  additionalXpPerLevel: 50
+};
 
 export const xpRewardScaling: XpRewardScaling = {
   multiplierPerKill: 0.95,

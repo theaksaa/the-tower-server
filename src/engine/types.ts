@@ -64,6 +64,11 @@ export type XpRewardScaling = {
   minimumReward: number;
 };
 
+export type LevelProgression = {
+  baseXpForNextLevel: number;
+  additionalXpPerLevel: number;
+};
+
 export type HeroDefaults = {
   id: string;
   name: string;
@@ -101,7 +106,7 @@ export type RunConfig = {
   runId: string;
   encounters: Monster[];
   heroes: HeroDefaults[];
-  xpTable: number[];
+  levelProgression: LevelProgression;
   xpRewardScaling: XpRewardScaling;
   coinRewardScaling: CoinRewardScaling;
   shopItems: ShopItem[];

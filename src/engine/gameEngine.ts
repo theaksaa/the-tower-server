@@ -4,10 +4,10 @@ import {
   encounters,
   getMove,
   heroes,
+  levelProgression,
   moveRegistry,
   shopItems,
-  xpRewardScaling,
-  xpTable
+  xpRewardScaling
 } from "./config.js";
 import type { BattleState, Monster, MonsterMoveResponse, RunConfig } from "./types.js";
 import { createId } from "../utils/id.js";
@@ -59,7 +59,7 @@ export function createGameEngine(): GameEngine {
         runId: createId(),
         encounters,
         heroes,
-        xpTable,
+        levelProgression,
         xpRewardScaling,
         coinRewardScaling,
         shopItems,
