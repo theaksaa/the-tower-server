@@ -4,7 +4,9 @@ import type {
   Monster,
   Move,
   MoveRegistry,
+  ShopItem,
   Stats,
+  UpgradeableStatKey,
   XpRewardScaling
 } from "./types.js";
 
@@ -424,6 +426,53 @@ export const moveRegistry: MoveRegistry = createMoveRegistry({
   }
 });
 
+function createStatShopItem(
+  id: string,
+  name: string,
+  description: string,
+  spriteKey: string,
+  cost: number,
+  stat: UpgradeableStatKey,
+  value: number
+) {
+  return {
+    id,
+    name,
+    description,
+    spriteKey,
+    cost,
+    repeatable: true,
+    type: "stat" as const,
+    stat,
+    value
+  };
+}
+
+function createMoveShopItem(
+  id: string,
+  name: string,
+  description: string,
+  cost: number,
+  moveId: string
+) {
+  const move = moveRegistry[moveId];
+
+  if (!move) {
+    throw new Error(`unknown_move_shop_item:${moveId}`);
+  }
+
+  return {
+    id,
+    name,
+    description,
+    spriteKey: move.spriteKey,
+    cost,
+    repeatable: false as const,
+    type: "move" as const,
+    moveId
+  };
+}
+
 export const encounters: Monster[] = [
   {
     id: "goblin_warrior",
@@ -481,6 +530,73 @@ export const encounters: Monster[] = [
     coinReward: 125,
     spriteKey: "werebear"
   }
+];
+
+export const shopItems: ShopItem[] = [
+  createStatShopItem(
+    "health_tonic",
+    "Health Tonic",
+    "Permanently increases max Health.",
+    "health",
+    35,
+    "health",
+    20
+  ),
+  createStatShopItem(
+    "iron_grip",
+    "Iron Grip",
+    "Permanently increases Attack.",
+    "attack",
+    40,
+    "attack",
+    3
+  ),
+  createStatShopItem(
+    "tower_shield",
+    "Tower Shield",
+    "Permanently increases Defense.",
+    "defense",
+    40,
+    "defense",
+    3
+  ),
+  createStatShopItem(
+    "mage_signet",
+    "Mage Signet",
+    "Permanently increases Magic.",
+    "magic",
+    40,
+    "magic",
+    3
+  ),
+  createMoveShopItem(
+    "buy_headbutt",
+    "Headbutt Manual",
+    "Unlocks Headbutt for the hero.",
+    55,
+    "headbutt"
+  ),
+  createMoveShopItem(
+    "buy_firebolt",
+    "Firebolt Tome",
+    "Unlocks Firebolt for the hero.",
+    55,
+    "firebolt"
+  ),
+  createMoveShopItem(
+    "buy_hex_shield",
+    "Hex Shield Sigil",
+    "Unlocks Hex Shield for the hero.",
+    65,
+    "hex_shield"
+  ),
+  createMoveShopItem(
+    "buy_drain_life",
+    "Drain Life Grimoire",
+    "Unlocks Drain Life for the hero.",
+    70,
+    "drain_life"
+  )
 ];
 
 export function getMove(moveId: string): Move | undefined {

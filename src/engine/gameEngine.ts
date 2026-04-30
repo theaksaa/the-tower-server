@@ -5,6 +5,7 @@ import {
   getMove,
   heroes,
   moveRegistry,
+  shopItems,
   xpRewardScaling,
   xpTable
 } from "./config.js";
@@ -61,6 +62,7 @@ export function createGameEngine(): GameEngine {
         xpTable,
         xpRewardScaling,
         coinRewardScaling,
+        shopItems,
         moveRegistry
       };
     },

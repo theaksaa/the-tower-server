@@ -117,6 +117,29 @@ No params, no body.
     "multiplierPerKill": 0.9,
     "minimumReward": 5
   },
+  "shopItems": [
+    {
+      "id": "health_tonic",
+      "name": "Health Tonic",
+      "description": "Permanently increases max Health.",
+      "spriteKey": "health_tonic",
+      "cost": 35,
+      "repeatable": true,
+      "type": "stat",
+      "stat": "health",
+      "value": 20
+    },
+    {
+      "id": "buy_firebolt",
+      "name": "Firebolt Tome",
+      "description": "Unlocks Firebolt for the hero.",
+      "spriteKey": "firebolt",
+      "cost": 55,
+      "repeatable": false,
+      "type": "move",
+      "moveId": "firebolt"
+    }
+  ],
   "moveRegistry": {
     "slash": {
       "id": "slash",
@@ -145,6 +168,9 @@ No params, no body.
 - use `xpTable` for level-up thresholds
 - use `xpRewardScaling` with each monster's `xpReward` to calculate how much XP a kill gives as the run goes on
 - use `coinRewardScaling` with each monster's `coinReward` to calculate how much gold a kill gives as the run goes on
+- use `shopItems` to render the shop and apply permanent stat boosts or move unlocks
+- for move shop entries, read full move data from `moveRegistry[shopItem.moveId]`
+- respect `repeatable` so one-time purchases cannot be bought again
 - use `moveRegistry[moveId]` whenever you need full move details in battle UI, tooltips, or resolution logic
 
 ### `GET /battle/monster-move`
@@ -330,6 +356,36 @@ type HeroDefaults = {
 };
 ```
 
+### `ShopItem`
+
+```ts
+type ShopItem =
+  | {
+      id: string;
+      name: string;
+      description: string;
+      spriteKey: string;
+      cost: number;
+      repeatable: true;
+      type: "stat";
+      stat: "health" | "attack" | "defense" | "magic";
+      value: number;
+    }
+  | {
+      id: string;
+      name: string;
+      description: string;
+      spriteKey: string;
+      cost: number;
+      repeatable: false;
+      type: "move";
+      moveId: string;
+    };
+```
+
+- stat items can be purchased multiple times when `repeatable` is `true`
+- move items are one-time unlocks and always use a `moveId` that exists in `moveRegistry`
+
 ### `RunConfig`
 
 ```ts
@@ -340,6 +396,7 @@ type RunConfig = {
   xpTable: number[];
   xpRewardScaling: XpRewardScaling;
   coinRewardScaling: CoinRewardScaling;
+  shopItems: ShopItem[];
   moveRegistry: Record<string, Move>;
 };
 ```
@@ -370,6 +427,9 @@ The server does not calculate final battle results. The client should:
 - award coins after a win with a formula like `Math.max(minimumReward, Math.round(monster.coinReward * multiplierPerKill ** monstersKilledSoFar))`
 - store which hero was selected for the run
 - apply level-ups using `xpTable` and the selected hero's `statsPerLevel`
+- apply purchased stat items permanently to the hero's tracked stats
+- prevent re-buying any `shopItems` where `repeatable` is `false`
+- for move purchases, unlock the referenced `moveId` from `moveRegistry`
 - pick one move from `learnableMoves` after each victory if that is part of your flow
 - keep the equipped move list to a max of 4 moves
 

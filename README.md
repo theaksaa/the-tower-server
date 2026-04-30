@@ -96,6 +96,29 @@ GET /run/config
     "multiplierPerKill": 0.9,
     "minimumReward": 5
   },
+  "shopItems": [
+    {
+      "id": "health_tonic",
+      "name": "Health Tonic",
+      "description": "Permanently increases max Health.",
+      "spriteKey": "health_tonic",
+      "cost": 35,
+      "repeatable": true,
+      "type": "stat",
+      "stat": "health",
+      "value": 20
+    },
+    {
+      "id": "buy_firebolt",
+      "name": "Firebolt Tome",
+      "description": "Unlocks Firebolt for the hero.",
+      "spriteKey": "firebolt",
+      "cost": 55,
+      "repeatable": false,
+      "type": "move",
+      "moveId": "firebolt"
+    }
+  ],
   "moveRegistry": {
     "move_id": { ...Move },
     "move_id": { ...Move }
@@ -104,6 +127,8 @@ GET /run/config
 ```
 
 The `moveRegistry` contains every move that exists in the game — both hero defaults and all monster moves. The client uses this to look up move details anywhere in the UI without a separate request.
+
+`shopItems` contains permanent stat upgrades and move unlocks for the client shop. Move shop entries always reference a valid move in `moveRegistry`, and `repeatable` tells the client whether the player can buy that item again.
 
 `xpTable[i]` is the total XP required to reach level `i+1`. Index 0 is always 0 (the hero starts at level 1).
 
@@ -157,7 +182,23 @@ All fields are required unless marked optional.
 | `xpTable` | `number[]` | XP thresholds per level. Length defines max level. |
 | `xpRewardScaling` | `XpRewardScaling` | Global settings for reducing monster XP rewards after each kill. |
 | `coinRewardScaling` | `CoinRewardScaling` | Global settings for reducing monster coin rewards after each kill. |
+| `shopItems` | `ShopItem[]` | Shop entries for permanent stat upgrades and move unlocks. |
 | `moveRegistry` | `Record<string, Move>` | All moves in the game, keyed by move ID. |
+
+### ShopItem
+
+| Field | Type | Description |
+|---|---|---|
+| `id` | `string` | Unique identifier for the shop entry. |
+| `name` | `string` | Display name shown in the shop UI. |
+| `description` | `string` | Short summary of the item's effect. |
+| `spriteKey` | `string` | Asset key used for the shop icon. |
+| `cost` | `number` | Coin cost to buy the item. |
+| `repeatable` | `boolean` | Whether the player can purchase the item multiple times. |
+| `type` | `"stat" \| "move"` | Distinguishes stat upgrades from move unlocks. |
+| `stat` | `"health" \| "attack" \| "defense" \| "magic"` | Only present when `type` is `"stat"`. |
+| `value` | `number` | Only present when `type` is `"stat"`; the permanent stat increase. |
+| `moveId` | `string` | Only present when `type` is `"move"`; must exist in `moveRegistry`. |
 
 ### HeroDefaults
 

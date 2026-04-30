@@ -1,5 +1,7 @@
 export type StatKey = "attack" | "defense" | "magic";
 
+export type UpgradeableStatKey = StatKey | "health";
+
 export type Stats = {
   health: number;
   attack: number;
@@ -72,6 +74,29 @@ export type HeroDefaults = {
   moves: string[];
 };
 
+export type ShopItemBase = {
+  id: string;
+  name: string;
+  description: string;
+  spriteKey: string;
+  cost: number;
+  repeatable: boolean;
+};
+
+export type StatShopItem = ShopItemBase & {
+  type: "stat";
+  stat: UpgradeableStatKey;
+  value: number;
+};
+
+export type MoveShopItem = ShopItemBase & {
+  type: "move";
+  moveId: string;
+  repeatable: false;
+};
+
+export type ShopItem = StatShopItem | MoveShopItem;
+
 export type RunConfig = {
   runId: string;
   encounters: Monster[];
@@ -79,6 +104,7 @@ export type RunConfig = {
   xpTable: number[];
   xpRewardScaling: XpRewardScaling;
   coinRewardScaling: CoinRewardScaling;
+  shopItems: ShopItem[];
   moveRegistry: MoveRegistry;
 };
 
