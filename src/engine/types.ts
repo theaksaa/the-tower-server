@@ -69,6 +69,14 @@ export type LevelProgression = {
   additionalXpPerLevel: number;
 };
 
+export type EndlessModeConfig = {
+  enabled: boolean;
+  encountersPerLoop: number;
+  healthMultiplierPerLoop: number;
+  statMultiplierPerLoop: number;
+  rewardMultiplierPerLoop: number;
+};
+
 export type HeroDefaults = {
   id: string;
   name: string;
@@ -107,6 +115,7 @@ export type RunConfig = {
   encounters: Monster[];
   heroes: HeroDefaults[];
   levelProgression: LevelProgression;
+  endlessMode: EndlessModeConfig;
   xpRewardScaling: XpRewardScaling;
   coinRewardScaling: CoinRewardScaling;
   shopItems: ShopItem[];
@@ -127,4 +136,15 @@ export type BattleState = {
 export type MonsterMoveResponse = {
   moveId: string;
   move: Move;
+};
+
+export type NextEncounterRequest = {
+  encountersCleared: number;
+};
+
+export type NextEncounterResponse = {
+  encounterNumber: number;
+  loopNumber: number;
+  baseMonsterId: string;
+  monster: Monster;
 };

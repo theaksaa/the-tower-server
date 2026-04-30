@@ -1,5 +1,6 @@
 import type {
   CoinRewardScaling,
+  EndlessModeConfig,
   HeroDefaults,
   LevelProgression,
   Monster,
@@ -75,6 +76,14 @@ export const heroes: HeroDefaults[] = [
 export const levelProgression: LevelProgression = {
   baseXpForNextLevel: 100,
   additionalXpPerLevel: 50
+};
+
+export const endlessMode: EndlessModeConfig = {
+  enabled: true,
+  encountersPerLoop: 5,
+  healthMultiplierPerLoop: 1.2,
+  statMultiplierPerLoop: 1.12,
+  rewardMultiplierPerLoop: 1.15
 };
 
 export const xpRewardScaling: XpRewardScaling = {

@@ -3,6 +3,7 @@
 This server is stateless and simple:
 
 - `GET /run/config` gives the client all static game data needed for a run
+- `POST /run/next-encounter` gives the client the next server-generated endless encounter
 - `GET /battle/monster-move` or `POST /battle/monster-move` gives the monster's move for the current turn
 - the client is responsible for rendering, local battle resolution, XP progression, learned moves, and temporary stat effects
 
@@ -112,6 +113,13 @@ No params, no body.
     "baseXpForNextLevel": 100,
     "additionalXpPerLevel": 50
   },
+  "endlessMode": {
+    "enabled": true,
+    "encountersPerLoop": 5,
+    "healthMultiplierPerLoop": 1.2,
+    "statMultiplierPerLoop": 1.12,
+    "rewardMultiplierPerLoop": 1.15
+  },
   "xpRewardScaling": {
     "multiplierPerKill": 0.95,
     "minimumReward": 25
@@ -169,12 +177,64 @@ No params, no body.
 - initialize the hero from the selected hero's `baseStats` and `moves`
 - use `hero.spriteKey` and `move.spriteKey` to resolve art/icons in the client
 - use `levelProgression` to calculate how much XP is needed for each next level with no max level cap
+- if `endlessMode.enabled` is `true`, call `POST /run/next-encounter` whenever you need the next endless battle
 - use `xpRewardScaling` with each monster's `xpReward` to calculate how much XP a kill gives as the run goes on
 - use `coinRewardScaling` with each monster's `coinReward` to calculate how much gold a kill gives as the run goes on
 - use `shopItems` to render the shop and apply permanent stat boosts or move unlocks
 - for move shop entries, read full move data from `moveRegistry[shopItem.moveId]`
 - respect `repeatable` so one-time purchases cannot be bought again
 - use `moveRegistry[moveId]` whenever you need full move details in battle UI, tooltips, or resolution logic
+
+### `POST /run/next-encounter`
+
+Call this when you want the server to generate the next endless-mode encounter.
+
+#### Request
+
+```http
+POST /run/next-encounter
+Content-Type: application/json
+```
+
+```json
+{
+  "encountersCleared": 5
+}
+```
+
+- `encountersCleared` is the number of battles the player has already won in the current run
+- with the current config, `0-4` maps to the first loop and `5-9` maps to the second loop
+
+#### Response
+
+```json
+{
+  "encounterNumber": 6,
+  "loopNumber": 2,
+  "baseMonsterId": "goblin_warrior",
+  "monster": {
+    "id": "goblin_warrior_endless_2",
+    "name": "Goblin Warrior +1",
+    "description": "A scrappy fighter who wins through cheap shots and reckless aggression. Empowered by endless ascent.",
+    "stats": {
+      "health": 84,
+      "attack": 17,
+      "defense": 8,
+      "magic": 4
+    },
+    "moves": ["rusty_blade", "dirty_kick", "frenzy", "headbutt"],
+    "learnableMoves": ["rusty_blade", "dirty_kick", "frenzy", "headbutt"],
+    "xpReward": 92,
+    "coinReward": 46,
+    "spriteKey": "orc"
+  }
+}
+```
+
+- `encounterNumber` is 1-indexed across the entire endless run
+- `loopNumber` is 1 for the first pass through the roster, 2 for the second, and so on
+- `baseMonsterId` identifies which original roster monster was used as the template
+- `monster` is the fully scaled encounter to render and reward from
 
 ### `GET /battle/monster-move`
 
@@ -358,6 +418,22 @@ type LevelProgression = {
   `baseXpForNextLevel + (N - 1) * additionalXpPerLevel`
 - with the current config, the next-level costs are `100, 150, 200, 250, 300...`
 
+### `EndlessModeConfig`
+
+```ts
+type EndlessModeConfig = {
+  enabled: boolean;
+  encountersPerLoop: number;
+  healthMultiplierPerLoop: number;
+  statMultiplierPerLoop: number;
+  rewardMultiplierPerLoop: number;
+};
+```
+
+- `encountersPerLoop` should match the base roster size used by the server for endless rotation
+- at the start of each new loop, the server multiplies monster `health`, `attack`, `defense`, and `magic`
+- XP and coin rewards are also scaled upward by the server before the client applies its usual per-kill reward decay
+
 ### `HeroDefaults`
 
 ```ts
@@ -410,6 +486,7 @@ type RunConfig = {
   encounters: Monster[];
   heroes: HeroDefaults[];
   levelProgression: LevelProgression;
+  endlessMode: EndlessModeConfig;
   xpRewardScaling: XpRewardScaling;
   coinRewardScaling: CoinRewardScaling;
   shopItems: ShopItem[];
@@ -448,6 +525,7 @@ The server does not calculate final battle results. The client should:
 - for move purchases, unlock the referenced `moveId` from `moveRegistry`
 - pick one move from `learnableMoves` after each victory if that is part of your flow
 - keep the equipped move list to a max of 4 moves
+- when using endless mode, request the next encounter from the server instead of generating or scaling monsters locally
 
 ## Error Responses
 
@@ -467,6 +545,10 @@ All errors use this shape:
   - invalid JSON
   - missing required fields
   - wrong field types
+- `400 invalid_next_encounter_request`
+  - missing `encountersCleared`
+  - negative `encountersCleared`
+  - non-integer `encountersCleared`
 - `404 monster_not_found`
   - `monsterId` does not match any configured encounter
 - `500 server_error`

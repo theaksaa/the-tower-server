@@ -9,6 +9,7 @@ The server is the authoritative source for all game configuration and monster AI
 1. [Architecture Overview](#architecture-overview)
 2. [Endpoints](#endpoints)
    - [GET /run/config](#get-runconfig)
+   - [POST /run/next-encounter](#post-runnext-encounter)
    - [GET /battle/monster-move](#get-battlemonster-move)
 3. [Data Schemas](#data-schemas)
    - [RunConfig](#runconfig)
@@ -35,6 +36,9 @@ Client                          Server
   |                               |
   |-- GET /run/config ----------->|  Called once when the player starts a new run.
   |<-- RunConfig (5 monsters) ----|  Server returns the full encounter list.
+  |                               |
+  |-- POST /run/next-encounter -->|  Called when endless mode needs a new battle.
+  |<-- NextEncounterResponse -----|  Server returns a scaled monster.
   |                               |
   |  [Player picks a move]        |
   |                               |
@@ -91,6 +95,13 @@ GET /run/config
     "baseXpForNextLevel": 100,
     "additionalXpPerLevel": 50
   },
+  "endlessMode": {
+    "enabled": true,
+    "encountersPerLoop": 5,
+    "healthMultiplierPerLoop": 1.2,
+    "statMultiplierPerLoop": 1.12,
+    "rewardMultiplierPerLoop": 1.15
+  },
   "xpRewardScaling": {
     "multiplierPerKill": 0.95,
     "minimumReward": 25
@@ -134,6 +145,38 @@ The `moveRegistry` contains every move that exists in the game — both hero def
 `shopItems` contains permanent stat upgrades and move unlocks for the client shop. Move shop entries always reference a valid move in `moveRegistry`, and `repeatable` tells the client whether the player can buy that item again.
 
 `levelProgression` defines infinite hero leveling. XP needed to go from level `N` to level `N + 1` is `baseXpForNextLevel + (N - 1) * additionalXpPerLevel`.
+
+`endlessMode` describes how the server scales monsters when the client requests new endless encounters.
+
+---
+
+### POST /run/next-encounter
+
+Called when the client wants the server to generate the next endless encounter.
+
+**Request**
+
+```http
+POST /run/next-encounter
+Content-Type: application/json
+```
+
+```json
+{
+  "encountersCleared": 5
+}
+```
+
+**Response** - `200 OK`
+
+```json
+{
+  "encounterNumber": 6,
+  "loopNumber": 2,
+  "baseMonsterId": "goblin_warrior",
+  "monster": { ...Monster }
+}
+```
 
 ---
 
@@ -183,10 +226,21 @@ All fields are required unless marked optional.
 | `encounters` | `Monster[]` | Exactly 5 monsters, ordered from first to last. |
 | `heroes` | `HeroDefaults[]` | Selectable hero definitions the client can offer at the start of a run. |
 | `levelProgression` | `LevelProgression` | Infinite XP progression config for calculating the next level requirement. |
+| `endlessMode` | `EndlessModeConfig` | Server-side endless encounter scaling settings. |
 | `xpRewardScaling` | `XpRewardScaling` | Global settings for reducing monster XP rewards after each kill. |
 | `coinRewardScaling` | `CoinRewardScaling` | Global settings for reducing monster coin rewards after each kill. |
 | `shopItems` | `ShopItem[]` | Shop entries for permanent stat upgrades and move unlocks. |
 | `moveRegistry` | `Record<string, Move>` | All moves in the game, keyed by move ID. |
+
+### EndlessModeConfig
+
+| Field | Type | Description |
+|---|---|---|
+| `enabled` | `boolean` | Whether endless encounter generation is available. |
+| `encountersPerLoop` | `number` | Number of base encounters before the roster loops back to the start. |
+| `healthMultiplierPerLoop` | `number` | Applied to monster `health` each time the roster loops. |
+| `statMultiplierPerLoop` | `number` | Applied to monster `attack`, `defense`, and `magic` each loop. |
+| `rewardMultiplierPerLoop` | `number` | Applied to monster `xpReward` and `coinReward` each loop. |
 
 ### ShopItem
 
@@ -612,6 +666,7 @@ Switching from v1 to v2 is a server-only change. The client calls the same endpo
 | Invalid or missing `state` param | `400` | `{ "error": "invalid_battle_state", "message": "..." }` |
 | Unknown `monsterId` in state | `404` | `{ "error": "monster_not_found", "message": "..." }` |
 | Internal server error | `500` | `{ "error": "server_error", "message": "..." }` |
+| Invalid `/run/next-encounter` request | `400` | `{ "error": "invalid_next_encounter_request", "message": "..." }` |
 
 All error responses use the shape:
 
