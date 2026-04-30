@@ -1,9 +1,11 @@
 import type {
+  CoinRewardScaling,
   HeroDefaults,
   Monster,
   Move,
   MoveRegistry,
-  Stats
+  Stats,
+  XpRewardScaling
 } from "./types.js";
 
 type MoveDefinition = Omit<Move, "spriteKey"> & {
@@ -68,6 +70,16 @@ export const heroes: HeroDefaults[] = [
 ];
 
 export const xpTable = [0, 100, 250, 450, 700];
+
+export const xpRewardScaling: XpRewardScaling = {
+  multiplierPerKill: 0.95,
+  minimumReward: 25
+};
+
+export const coinRewardScaling: CoinRewardScaling = {
+  multiplierPerKill: 0.9,
+  minimumReward: 5
+};
 
 export const moveRegistry: MoveRegistry = createMoveRegistry({
   slash: {
@@ -422,6 +434,7 @@ export const encounters: Monster[] = [
     moves: ["rusty_blade", "dirty_kick", "frenzy", "headbutt"],
     learnableMoves: ["rusty_blade", "dirty_kick", "frenzy", "headbutt"],
     xpReward: 80,
+    coinReward: 40,
     spriteKey: "orc"
   },
   {
@@ -432,6 +445,7 @@ export const encounters: Monster[] = [
     moves: ["bite", "web_throw", "pounce", "skitter"],
     learnableMoves: ["bite", "web_throw", "pounce", "skitter"],
     xpReward: 110,
+    coinReward: 55,
     spriteKey: "orc_rider"
   },
   {
@@ -442,6 +456,7 @@ export const encounters: Monster[] = [
     moves: ["firebolt", "arcane_surge", "mana_drain", "hex_shield"],
     learnableMoves: ["firebolt", "arcane_surge", "mana_drain", "hex_shield"],
     xpReward: 140,
+    coinReward: 70,
     spriteKey: "armored_orc"
   },
   {
@@ -452,6 +467,7 @@ export const encounters: Monster[] = [
     moves: ["shadow_bolt", "drain_life", "curse", "dark_pact"],
     learnableMoves: ["shadow_bolt", "drain_life", "curse", "dark_pact"],
     xpReward: 180,
+    coinReward: 90,
     spriteKey: "wizard"
   },
   {
@@ -462,6 +478,7 @@ export const encounters: Monster[] = [
     moves: ["flame_breath", "claw_swipe", "intimidate", "dragon_scales"],
     learnableMoves: ["flame_breath", "claw_swipe", "intimidate", "dragon_scales"],
     xpReward: 250,
+    coinReward: 125,
     spriteKey: "werebear"
   }
 ];

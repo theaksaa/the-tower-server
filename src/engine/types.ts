@@ -48,7 +48,18 @@ export type Monster = {
   moves: string[];
   learnableMoves: string[];
   xpReward: number;
+  coinReward: number;
   spriteKey: string;
+};
+
+export type CoinRewardScaling = {
+  multiplierPerKill: number;
+  minimumReward: number;
+};
+
+export type XpRewardScaling = {
+  multiplierPerKill: number;
+  minimumReward: number;
 };
 
 export type HeroDefaults = {
@@ -66,6 +77,8 @@ export type RunConfig = {
   encounters: Monster[];
   heroes: HeroDefaults[];
   xpTable: number[];
+  xpRewardScaling: XpRewardScaling;
+  coinRewardScaling: CoinRewardScaling;
   moveRegistry: MoveRegistry;
 };
 

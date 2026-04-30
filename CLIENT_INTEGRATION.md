@@ -45,6 +45,7 @@ No params, no body.
       "moves": ["rusty_blade", "dirty_kick", "frenzy", "headbutt"],
       "learnableMoves": ["rusty_blade", "dirty_kick", "frenzy", "headbutt"],
       "xpReward": 80,
+      "coinReward": 40,
       "spriteKey": "goblin_warrior"
     }
   ],
@@ -108,6 +109,14 @@ No params, no body.
     }
   ],
   "xpTable": [0, 100, 250, 450, 700],
+  "xpRewardScaling": {
+    "multiplierPerKill": 0.95,
+    "minimumReward": 25
+  },
+  "coinRewardScaling": {
+    "multiplierPerKill": 0.9,
+    "minimumReward": 5
+  },
   "moveRegistry": {
     "slash": {
       "id": "slash",
@@ -134,6 +143,8 @@ No params, no body.
 - initialize the hero from the selected hero's `baseStats` and `moves`
 - use `hero.spriteKey` and `move.spriteKey` to resolve art/icons in the client
 - use `xpTable` for level-up thresholds
+- use `xpRewardScaling` with each monster's `xpReward` to calculate how much XP a kill gives as the run goes on
+- use `coinRewardScaling` with each monster's `coinReward` to calculate how much gold a kill gives as the run goes on
 - use `moveRegistry[moveId]` whenever you need full move details in battle UI, tooltips, or resolution logic
 
 ### `GET /battle/monster-move`
@@ -282,7 +293,26 @@ type Monster = {
   moves: string[];
   learnableMoves: string[];
   xpReward: number;
+  coinReward: number;
   spriteKey: string;
+};
+```
+
+### `CoinRewardScaling`
+
+```ts
+type CoinRewardScaling = {
+  multiplierPerKill: number;
+  minimumReward: number;
+};
+```
+
+### `XpRewardScaling`
+
+```ts
+type XpRewardScaling = {
+  multiplierPerKill: number;
+  minimumReward: number;
 };
 ```
 
@@ -308,6 +338,8 @@ type RunConfig = {
   encounters: Monster[];
   heroes: HeroDefaults[];
   xpTable: number[];
+  xpRewardScaling: XpRewardScaling;
+  coinRewardScaling: CoinRewardScaling;
   moveRegistry: Record<string, Move>;
 };
 ```
@@ -334,7 +366,8 @@ The server does not calculate final battle results. The client should:
 - resolve damage, healing, drain, and stat modifiers locally
 - track current HP for both sides
 - track temporary buffs/debuffs and remove them after `durationTurns`
-- award `xpReward` after a win
+- award XP after a win with a formula like `Math.max(minimumReward, Math.round(monster.xpReward * multiplierPerKill ** monstersKilledSoFar))`
+- award coins after a win with a formula like `Math.max(minimumReward, Math.round(monster.coinReward * multiplierPerKill ** monstersKilledSoFar))`
 - store which hero was selected for the run
 - apply level-ups using `xpTable` and the selected hero's `statsPerLevel`
 - pick one move from `learnableMoves` after each victory if that is part of your flow

@@ -88,6 +88,14 @@ GET /run/config
     }
   ],
   "xpTable": [0, 100, 250, 450, 700],
+  "xpRewardScaling": {
+    "multiplierPerKill": 0.95,
+    "minimumReward": 25
+  },
+  "coinRewardScaling": {
+    "multiplierPerKill": 0.9,
+    "minimumReward": 5
+  },
   "moveRegistry": {
     "move_id": { ...Move },
     "move_id": { ...Move }
@@ -147,6 +155,8 @@ All fields are required unless marked optional.
 | `encounters` | `Monster[]` | Exactly 5 monsters, ordered from first to last. |
 | `heroes` | `HeroDefaults[]` | Selectable hero definitions the client can offer at the start of a run. |
 | `xpTable` | `number[]` | XP thresholds per level. Length defines max level. |
+| `xpRewardScaling` | `XpRewardScaling` | Global settings for reducing monster XP rewards after each kill. |
+| `coinRewardScaling` | `CoinRewardScaling` | Global settings for reducing monster coin rewards after each kill. |
 | `moveRegistry` | `Record<string, Move>` | All moves in the game, keyed by move ID. |
 
 ### HeroDefaults
@@ -192,6 +202,7 @@ Applies to both heroes and monsters.
 | `moves` | `string[]` | Move IDs this monster can use in battle. |
 | `learnableMoves` | `string[]` | Move IDs the hero can learn upon winning. One is chosen at random by the client. |
 | `xpReward` | `number` | XP awarded to the hero on victory. |
+| `coinReward` | `number` | Base coins awarded for killing this monster before decay is applied. |
 | `spriteKey` | `string` | Asset key the client uses to render the monster sprite. |
 
 ```json
@@ -203,8 +214,47 @@ Applies to both heroes and monsters.
   "moves": ["rusty_blade", "dirty_kick", "frenzy", "headbutt"],
   "learnableMoves": ["rusty_blade", "dirty_kick", "frenzy", "headbutt"],
   "xpReward": 80,
+  "coinReward": 40,
   "spriteKey": "goblin_warrior"
 }
+```
+
+### CoinRewardScaling
+
+| Field | Type | Description |
+|---|---|---|
+| `multiplierPerKill` | `number` | Multiplier applied once for each monster already killed in the current run. |
+| `minimumReward` | `number` | Lowest coin payout allowed after scaling and rounding. |
+
+Suggested client formula:
+
+```ts
+const reward = Math.max(
+  runConfig.coinRewardScaling.minimumReward,
+  Math.round(
+    monster.coinReward *
+      runConfig.coinRewardScaling.multiplierPerKill ** monstersKilledSoFar
+  )
+);
+```
+
+### XpRewardScaling
+
+| Field | Type | Description |
+|---|---|---|
+| `multiplierPerKill` | `number` | Multiplier applied once for each monster already killed in the current run. |
+| `minimumReward` | `number` | Lowest XP payout allowed after scaling and rounding. |
+
+Suggested client formula:
+
+```ts
+const xpReward = Math.max(
+  runConfig.xpRewardScaling.minimumReward,
+  Math.round(
+    monster.xpReward *
+      runConfig.xpRewardScaling.multiplierPerKill ** monstersKilledSoFar
+  )
+);
 ```
 
 ### Move
@@ -386,7 +436,8 @@ Positive modifier values are buffs. Negative modifier values are debuffs. Buff a
 
 - The client selects one entry from `heroes` at the start of the run.
 - The chosen hero starts at **Level 1** with that hero's `baseStats` and `moves`.
-- Each battle awards `monster.xpReward` XP on victory.
+- Each battle awards XP. Start from `monster.xpReward`, then reduce it by `xpRewardScaling.multiplierPerKill` for each monster already killed in the run, never going below `xpRewardScaling.minimumReward`.
+- Each battle also awards coins. Start from `monster.coinReward`, then reduce it by `coinRewardScaling.multiplierPerKill` for each monster already killed in the run, never going below `coinRewardScaling.minimumReward`.
 - When accumulated XP reaches the threshold for the next level (`xpTable[level]`), the hero levels up.
 - On level-up, each stat increases by the corresponding value in the chosen hero's `statsPerLevel`.
 - The hero can equip up to **4 moves** at a time, chosen from all moves they have learned.
@@ -406,7 +457,7 @@ The five encounters are ordered by increasing difficulty. Stats and movesets are
 | 4 | **Witch** | Drain caster | Uses heavy magic damage, self-healing through damage, and Attack debuffs. |
 | 5 | **Dragon** | Final boss | Mixed physical and magic threat with Attack debuffs and Defense buffs. |
 
-> **Tuning note:** Adjust `xpReward`, stats, and movesets in the config until a hero on a clean first run can realistically beat encounter 1 at level 1 and will need level 3–4 to reliably beat encounter 5.
+> **Tuning note:** Adjust `xpReward`, `coinReward`, stats, and movesets in the config until a hero on a clean first run can realistically beat encounter 1 at level 1 and will need level 3–4 to reliably beat encounter 5.
 
 ---
 
