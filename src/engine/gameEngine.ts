@@ -48,6 +48,11 @@ export type GameEngine = {
   selectMonsterMove(state: BattleState): MonsterMoveResponse;
 };
 
+type ScoredMove = {
+  move: NonNullable<ReturnType<typeof getMove>>;
+  score: number;
+};
+
 function getMonster(monsterId: string): Monster {
   const baseMonsterId = monsterId.replace(/_endless_\d+$/, "");
   const monster = encounters.find((entry) => entry.id === baseMonsterId);
@@ -62,6 +67,17 @@ function getMonster(monsterId: string): Monster {
 function getRandomItem<T>(items: readonly T[]): T {
   const index = Math.floor(Math.random() * items.length);
   return items[index];
+}
+
+function getLoopIndex(monsterId: string): number {
+  const match = monsterId.match(/_endless_(\d+)$/);
+
+  if (!match) {
+    return 0;
+  }
+
+  const loopNumber = Number.parseInt(match[1], 10);
+  return Number.isNaN(loopNumber) ? 0 : Math.max(0, loopNumber - 1);
 }
 
 function scaleStat(value: number, multiplier: number) {
@@ -94,6 +110,200 @@ function createScaledEncounter(baseMonster: Monster, loopIndex: number): Monster
     xpReward: Math.max(1, Math.round(baseMonster.xpReward * rewardMultiplier)),
     coinReward: Math.max(1, Math.round(baseMonster.coinReward * rewardMultiplier))
   };
+}
+
+function getMonsterForBattle(monsterId: string): Monster {
+  const baseMonster = getMonster(monsterId);
+  return createScaledEncounter(baseMonster, getLoopIndex(monsterId));
+}
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(max, Math.max(min, value));
+}
+
+function getMoveStatValue(moveType: "physical" | "magic" | "status", stats: Stats) {
+  if (moveType === "physical") {
+    return stats.attack;
+  }
+
+  if (moveType === "magic") {
+    return stats.magic;
+  }
+
+  return 0;
+}
+
+function estimateDamage(move: NonNullable<ReturnType<typeof getMove>>, stats: Stats) {
+  return move.basePower + getMoveStatValue(move.type, stats) * move.statMultiplier;
+}
+
+function estimateHealing(move: NonNullable<ReturnType<typeof getMove>>, monster: Monster) {
+  if (move.effect === "heal" || move.effect === "drain") {
+    return move.basePower + monster.stats.magic * move.statMultiplier;
+  }
+
+  return 0;
+}
+
+function countRecentMoveUses(moveHistory: string[], moveId: string, recentTurns: number) {
+  return moveHistory.slice(-recentTurns).filter((entry) => entry === moveId).length;
+}
+
+function getStrongestDamageValue(
+  moves: readonly NonNullable<ReturnType<typeof getMove>>[],
+  monster: Monster
+) {
+  const damageMoves = moves.filter(
+    (move) => move.effect === "damage" || move.effect === "damage_and_stat_modifier" || move.effect === "drain"
+  );
+
+  if (damageMoves.length === 0) {
+    return 0;
+  }
+
+  return Math.max(...damageMoves.map((move) => estimateDamage(move, monster.stats)));
+}
+
+function scoreMonsterMove(
+  move: NonNullable<ReturnType<typeof getMove>>,
+  state: BattleState,
+  monster: Monster,
+  validMoves: readonly NonNullable<ReturnType<typeof getMove>>[]
+) {
+  const monsterMaxHp = monster.stats.health;
+  const monsterCurrentHp = clamp(state.monsterCurrentHp, 0, monsterMaxHp);
+  const heroCurrentHp = Math.max(0, state.heroCurrentHp);
+  const missingHp = Math.max(0, monsterMaxHp - monsterCurrentHp);
+  const hpRatio = monsterMaxHp === 0 ? 0 : monsterCurrentHp / monsterMaxHp;
+  const lastMoveId = state.monsterMoveHistory.at(-1) ?? null;
+  const repeatedRecently = countRecentMoveUses(state.monsterMoveHistory, move.id, 2);
+  const strongestDamageValue = getStrongestDamageValue(validMoves, monster);
+  const projectedDamage = estimateDamage(move, monster.stats);
+  const projectedHealing = Math.min(missingHp, estimateHealing(move, monster));
+  const heroPressure = Math.max(state.heroStats.attack, state.heroStats.magic);
+
+  let score = 1;
+
+  if (
+    move.effect === "damage" ||
+    move.effect === "damage_and_stat_modifier" ||
+    move.effect === "drain"
+  ) {
+    score += projectedDamage;
+
+    if (heroCurrentHp > 0 && projectedDamage >= heroCurrentHp) {
+      score += 100;
+    } else if (heroCurrentHp > 0) {
+      score += (projectedDamage / heroCurrentHp) * 18;
+    }
+  }
+
+  if (move.effect === "heal") {
+    score += projectedHealing * (hpRatio <= 0.35 ? 4.5 : hpRatio <= 0.55 ? 3 : 1.2);
+
+    if (hpRatio <= 0.3) {
+      score += 35;
+    }
+  }
+
+  if (move.effect === "drain") {
+    score += projectedHealing * (hpRatio <= 0.45 ? 2.8 : 1.5);
+
+    if (hpRatio <= 0.35) {
+      score += 24;
+    }
+  }
+
+  if (move.effect === "stat_modifier" || move.effect === "damage_and_stat_modifier") {
+    const modifier = move.statModifier;
+
+    if (modifier) {
+      const modifierMagnitude = Math.abs(modifier.value) * modifier.durationTurns;
+
+      if (move.target === "self" && modifier.value > 0) {
+        if (modifier.stat === "defense") {
+          score += modifierMagnitude * (hpRatio <= 0.55 ? 2.2 : 1.2);
+          score += heroPressure * 0.5;
+        }
+
+        if (modifier.stat === "attack" || modifier.stat === "magic") {
+          const damageAlignment = validMoves.some(
+            (candidate) =>
+              candidate.type === modifier.stat &&
+              (candidate.effect === "damage" ||
+                candidate.effect === "damage_and_stat_modifier" ||
+                candidate.effect === "drain")
+          );
+
+          score += modifierMagnitude * (state.turnNumber <= 3 ? 2.1 : 1.1);
+
+          if (damageAlignment) {
+            score += strongestDamageValue * 0.35;
+          }
+        }
+      }
+
+      if (move.target === "opponent" && modifier.value < 0) {
+        if (modifier.stat === "defense") {
+          score += modifierMagnitude * 1.6;
+          score += strongestDamageValue * 0.25;
+        }
+
+        if (modifier.stat === "attack") {
+          score += modifierMagnitude * (hpRatio <= 0.6 ? 1.8 : 1.1);
+          score += state.heroStats.attack * 0.8;
+        }
+
+        if (modifier.stat === "magic") {
+          score += modifierMagnitude * 1.2;
+          score += state.heroStats.magic * 0.8;
+        }
+      }
+    }
+  }
+
+  if (move.hpCost !== null) {
+    score -= move.hpCost * (hpRatio <= 0.4 ? 3 : 1.2);
+  }
+
+  if (move.effect === "heal" && missingHp <= 0) {
+    score *= 0.1;
+  }
+
+  if (move.target === "self" && repeatedRecently > 0) {
+    score *= 0.6;
+  }
+
+  if (lastMoveId === move.id) {
+    score *= move.effect === "heal" || move.effect === "drain" ? 0.85 : 0.7;
+  }
+
+  if (hpRatio <= 0.3 && move.effect === "stat_modifier" && move.target === "self") {
+    const isDefensive = move.statModifier?.stat === "defense";
+    score *= isDefensive ? 1.15 : 0.7;
+  }
+
+  return Math.max(0.1, score);
+}
+
+function pickWeightedMove(scoredMoves: readonly ScoredMove[]) {
+  const totalScore = scoredMoves.reduce((sum, entry) => sum + entry.score, 0);
+
+  if (totalScore <= 0) {
+    return getRandomItem(scoredMoves).move;
+  }
+
+  let roll = Math.random() * totalScore;
+
+  for (const entry of scoredMoves) {
+    roll -= entry.score;
+
+    if (roll <= 0) {
+      return entry.move;
+    }
+  }
+
+  return scoredMoves[scoredMoves.length - 1]?.move ?? getRandomItem(scoredMoves).move;
 }
 
 export function createGameEngine(): GameEngine {
@@ -131,7 +341,7 @@ export function createGameEngine(): GameEngine {
       };
     },
     selectMonsterMove(state) {
-      const monster = getMonster(state.monsterId);
+      const monster = getMonsterForBattle(state.monsterId);
       const validMoves = monster.moves
         .map((moveId) => getMove(moveId))
         .filter((move): move is NonNullable<typeof move> => move !== undefined);
@@ -140,7 +350,11 @@ export function createGameEngine(): GameEngine {
         throw new Error("monster_has_no_valid_moves");
       }
 
-      const move = getRandomItem(validMoves);
+      const scoredMoves = validMoves.map((move) => ({
+        move,
+        score: scoreMonsterMove(move, state, monster, validMoves)
+      }));
+      const move = pickWeightedMove(scoredMoves);
 
       return {
         moveId: move.id,
