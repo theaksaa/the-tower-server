@@ -130,7 +130,13 @@ export type MoveShopItem = ShopItemBase & {
   repeatable: false;
 };
 
-export type ShopItem = StatShopItem | MoveShopItem;
+export type InventoryShopItem = ShopItemBase & {
+  type: "item";
+  itemId: string;
+  repeatable: false;
+};
+
+export type ShopItem = StatShopItem | MoveShopItem | InventoryShopItem;
 
 export type RunConfig = {
   runId: string;

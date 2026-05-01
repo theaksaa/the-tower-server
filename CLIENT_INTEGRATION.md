@@ -157,6 +157,16 @@ No params, no body.
       "repeatable": false,
       "type": "move",
       "moveId": "firebolt"
+    },
+    {
+      "id": "buy_field_tonic",
+      "name": "Field Tonic",
+      "description": "Adds a Field Tonic to the hero's inventory.",
+      "spriteKey": "field_tonic",
+      "cost": 45,
+      "repeatable": false,
+      "type": "item",
+      "itemId": "field_tonic"
     }
   ],
   "moveRegistry": {
@@ -203,8 +213,9 @@ No params, no body.
 - if `endlessMode.enabled` is `true`, call `POST /run/next-encounter` whenever you need the next endless battle
 - use `xpRewardScaling` with each monster's `xpReward` to calculate how much XP a kill gives as the run goes on
 - use `coinRewardScaling` with each monster's `coinReward` to calculate how much gold a kill gives as the run goes on
-- use `shopItems` to render the shop and apply permanent stat boosts or move unlocks
+- use `shopItems` to render the shop and apply permanent stat boosts, move unlocks, or item grants
 - for move shop entries, read full move data from `moveRegistry[shopItem.moveId]`
+- for item shop entries, read full item data from `itemRegistry[shopItem.itemId]`
 - respect `repeatable` so one-time purchases cannot be bought again
 - use `moveRegistry[moveId]` whenever you need full move details in battle UI, tooltips, or resolution logic
 - use `itemRegistry[itemId]` whenever you need full item details in battle UI, tooltips, equipment, inventory, or drops
@@ -531,11 +542,22 @@ type ShopItem =
       repeatable: false;
       type: "move";
       moveId: string;
+    }
+  | {
+      id: string;
+      name: string;
+      description: string;
+      spriteKey: string;
+      cost: number;
+      repeatable: false;
+      type: "item";
+      itemId: string;
     };
 ```
 
 - stat items can be purchased multiple times when `repeatable` is `true`
 - move items are one-time unlocks and always use a `moveId` that exists in `moveRegistry`
+- item shop entries are one-time purchases and always use an `itemId` that exists in `itemRegistry`
 
 ### `RunConfig`
 
@@ -583,6 +605,7 @@ The server does not calculate final battle results. The client should:
 - apply purchased stat items permanently to the hero's tracked stats
 - prevent re-buying any `shopItems` where `repeatable` is `false`
 - for move purchases, unlock the referenced `moveId` from `moveRegistry`
+- for item purchases, add the referenced `itemId` from `itemRegistry` to the hero's owned inventory
 - pick one move from `learnableMoves` after each victory if that is part of your flow
 - keep the equipped move list to a max of 4 moves
 - keep the equipped item list to a max of 4 items

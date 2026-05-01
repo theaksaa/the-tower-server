@@ -133,6 +133,16 @@ GET /run/config
       "repeatable": false,
       "type": "move",
       "moveId": "firebolt"
+    },
+    {
+      "id": "buy_field_tonic",
+      "name": "Field Tonic",
+      "description": "Adds a Field Tonic to the hero's inventory.",
+      "spriteKey": "field_tonic",
+      "cost": 45,
+      "repeatable": false,
+      "type": "item",
+      "itemId": "field_tonic"
     }
   ],
   "moveRegistry": {
@@ -148,7 +158,7 @@ GET /run/config
 
 The `moveRegistry` contains every move that exists in the game — both hero defaults and all monster moves. The client uses this to look up move details anywhere in the UI without a separate request.
 
-`shopItems` contains permanent stat upgrades and move unlocks for the client shop. Move shop entries always reference a valid move in `moveRegistry`, and `repeatable` tells the client whether the player can buy that item again.
+`shopItems` contains permanent stat upgrades, move unlocks, and inventory item purchases for the client shop. Move shop entries always reference a valid move in `moveRegistry`, item shop entries always reference a valid item in `itemRegistry`, and `repeatable` tells the client whether the player can buy that item again.
 
 `levelProgression` defines infinite hero leveling. XP needed to go from level `N` to level `N + 1` is `baseXpForNextLevel + (N - 1) * additionalXpPerLevel`.
 
@@ -235,7 +245,7 @@ All fields are required unless marked optional.
 | `endlessMode` | `EndlessModeConfig` | Server-side endless encounter scaling settings. |
 | `xpRewardScaling` | `XpRewardScaling` | Global settings for reducing monster XP rewards after each kill. |
 | `coinRewardScaling` | `CoinRewardScaling` | Global settings for reducing monster coin rewards after each kill. |
-| `shopItems` | `ShopItem[]` | Shop entries for permanent stat upgrades and move unlocks. |
+| `shopItems` | `ShopItem[]` | Shop entries for permanent stat upgrades, move unlocks, and item purchases. |
 | `moveRegistry` | `Record<string, Move>` | All moves in the game, keyed by move ID. |
 | `itemRegistry` | `Record<string, Item>` | All items in the game, keyed by item ID. |
 
@@ -259,10 +269,11 @@ All fields are required unless marked optional.
 | `spriteKey` | `string` | Asset key used for the shop icon. |
 | `cost` | `number` | Coin cost to buy the item. |
 | `repeatable` | `boolean` | Whether the player can purchase the item multiple times. |
-| `type` | `"stat" \| "move"` | Distinguishes stat upgrades from move unlocks. |
+| `type` | `"stat" \| "move" \| "item"` | Distinguishes stat upgrades, move unlocks, and item purchases. |
 | `stat` | `"health" \| "attack" \| "defense" \| "magic"` | Only present when `type` is `"stat"`. |
 | `value` | `number` | Only present when `type` is `"stat"`; the permanent stat increase. |
 | `moveId` | `string` | Only present when `type` is `"move"`; must exist in `moveRegistry`. |
+| `itemId` | `string` | Only present when `type` is `"item"`; must exist in `itemRegistry`. |
 
 ### HeroDefaults
 

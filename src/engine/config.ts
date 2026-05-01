@@ -624,6 +624,31 @@ function createMoveShopItem(
   };
 }
 
+function createItemShopItem(
+  id: string,
+  name: string,
+  description: string,
+  cost: number,
+  itemId: string
+) {
+  const item = itemRegistry[itemId];
+
+  if (!item) {
+    throw new Error(`unknown_item_shop_item:${itemId}`);
+  }
+
+  return {
+    id,
+    name,
+    description,
+    spriteKey: item.spriteKey,
+    cost,
+    repeatable: false as const,
+    type: "item" as const,
+    itemId
+  };
+}
+
 export const encounters: Monster[] = [
   {
     id: "goblin_warrior",
@@ -757,6 +782,27 @@ export const shopItems: ShopItem[] = [
     "Unlocks Drain Life for the hero.",
     70,
     "drain_life"
+  ),
+  createItemShopItem(
+    "buy_field_tonic",
+    "Field Tonic",
+    "Adds a Field Tonic to the hero's inventory.",
+    45,
+    "field_tonic"
+  ),
+  createItemShopItem(
+    "buy_war_drum",
+    "War Drum",
+    "Adds a War Drum to the hero's inventory.",
+    60,
+    "war_drum"
+  ),
+  createItemShopItem(
+    "buy_warding_orb",
+    "Warding Orb",
+    "Adds a Warding Orb to the hero's inventory.",
+    60,
+    "warding_orb"
   )
 ];
 
