@@ -44,6 +44,8 @@ No params, no body.
         "magic": 4
       },
       "moves": ["rusty_blade", "dirty_kick", "frenzy", "headbutt"],
+      "equippedItems": ["cracked_totem"],
+      "inventoryItems": [],
       "learnableMoves": ["rusty_blade", "dirty_kick", "frenzy", "headbutt"],
       "xpReward": 80,
       "coinReward": 40,
@@ -68,7 +70,9 @@ No params, no body.
         "defense": 3,
         "magic": 3
       },
-      "moves": ["slash", "shield_up", "battle_cry", "second_wind"]
+      "moves": ["slash", "shield_up", "battle_cry", "second_wind"],
+      "equippedItems": ["iron_blade", "tower_bulwark"],
+      "inventoryItems": ["field_tonic"]
     },
     {
       "id": "berserker",
@@ -87,7 +91,9 @@ No params, no body.
         "defense": 2,
         "magic": 2
       },
-      "moves": ["slash", "battle_cry", "headbutt", "second_wind"]
+      "moves": ["slash", "battle_cry", "headbutt", "second_wind"],
+      "equippedItems": ["war_drum", "spiked_band"],
+      "inventoryItems": []
     },
     {
       "id": "spellblade",
@@ -106,7 +112,9 @@ No params, no body.
         "defense": 2,
         "magic": 4
       },
-      "moves": ["slash", "firebolt", "arcane_surge", "second_wind"]
+      "moves": ["slash", "firebolt", "arcane_surge", "second_wind"],
+      "equippedItems": ["ember_charm", "warding_orb"],
+      "inventoryItems": ["field_tonic"]
     }
   ],
   "levelProgression": {
@@ -165,6 +173,19 @@ No params, no body.
       "statModifier": null,
       "hpCost": null
     }
+  },
+  "itemRegistry": {
+    "iron_blade": {
+      "id": "iron_blade",
+      "name": "Iron Blade",
+      "description": "Lowers the target's Defense while equipped.",
+      "spriteKey": "iron_blade",
+      "target": "opponent",
+      "statModifier": {
+        "stat": "defense",
+        "value": -5
+      }
+    }
   }
 }
 ```
@@ -175,7 +196,9 @@ No params, no body.
 - use `encounters` as the battle order
 - let the player pick one entry from `heroes`
 - initialize the hero from the selected hero's `baseStats` and `moves`
+- initialize the hero's equipped and inventory items from `equippedItems` and `inventoryItems`
 - use `hero.spriteKey` and `move.spriteKey` to resolve art/icons in the client
+- use `item.spriteKey` to resolve item art/icons in the client
 - use `levelProgression` to calculate how much XP is needed for each next level with no max level cap
 - if `endlessMode.enabled` is `true`, call `POST /run/next-encounter` whenever you need the next endless battle
 - use `xpRewardScaling` with each monster's `xpReward` to calculate how much XP a kill gives as the run goes on
@@ -184,6 +207,8 @@ No params, no body.
 - for move shop entries, read full move data from `moveRegistry[shopItem.moveId]`
 - respect `repeatable` so one-time purchases cannot be bought again
 - use `moveRegistry[moveId]` whenever you need full move details in battle UI, tooltips, or resolution logic
+- use `itemRegistry[itemId]` whenever you need full item details in battle UI, tooltips, equipment, inventory, or drops
+- treat items as losable inventory/equipment objects: when a monster dies, drop its items; when the hero dies, remove the hero's items
 
 ### `POST /run/next-encounter`
 
@@ -223,6 +248,8 @@ Content-Type: application/json
       "magic": 4
     },
     "moves": ["rusty_blade", "dirty_kick", "frenzy", "headbutt"],
+    "equippedItems": ["cracked_totem"],
+    "inventoryItems": [],
     "learnableMoves": ["rusty_blade", "dirty_kick", "frenzy", "headbutt"],
     "xpReward": 92,
     "coinReward": 46,
@@ -371,6 +398,28 @@ type Move = {
 };
 ```
 
+### `Item`
+
+```ts
+type Item = {
+  id: string;
+  name: string;
+  description: string;
+  spriteKey: string;
+  target: "self" | "opponent";
+  statModifier: {
+    stat: "health" | "attack" | "defense" | "magic";
+    value: number;
+  };
+};
+```
+
+- items do not deal damage, heal, or drain
+- items only apply a buff or debuff to `self` or `opponent`
+- item effects stay active for the whole battle while the item is equipped
+- items can also modify `health`, which the client should treat as max Health
+- items are losable because they live in equipment/inventory, not in the learned move pool
+
 ### `Monster`
 
 ```ts
@@ -380,12 +429,17 @@ type Monster = {
   description: string;
   stats: Stats;
   moves: string[];
+  equippedItems: string[];
+  inventoryItems: string[];
   learnableMoves: string[];
   xpReward: number;
   coinReward: number;
   spriteKey: string;
 };
 ```
+
+- monsters can have up to 4 equipped items at a time
+- if the monster dies, the client can drop both `equippedItems` and `inventoryItems`
 
 ### `CoinRewardScaling`
 
@@ -445,8 +499,13 @@ type HeroDefaults = {
   baseStats: Stats;
   statsPerLevel: Stats;
   moves: string[];
+  equippedItems: string[];
+  inventoryItems: string[];
 };
 ```
+
+- heroes can have up to 4 equipped items at a time
+- `equippedItems` are ready for battle and `inventoryItems` are owned but unequipped
 
 ### `ShopItem`
 
@@ -491,6 +550,7 @@ type RunConfig = {
   coinRewardScaling: CoinRewardScaling;
   shopItems: ShopItem[];
   moveRegistry: Record<string, Move>;
+  itemRegistry: Record<string, Item>;
 };
 ```
 
@@ -513,7 +573,7 @@ type BattleState = {
 
 The server does not calculate final battle results. The client should:
 
-- resolve damage, healing, drain, and stat modifiers locally
+- resolve move damage, move healing, move drain, and all stat modifiers locally
 - track current HP for both sides
 - track temporary buffs/debuffs and remove them after `durationTurns`
 - award XP after a win with a formula like `Math.max(minimumReward, Math.round(monster.xpReward * multiplierPerKill ** monstersKilledSoFar))`
@@ -525,6 +585,13 @@ The server does not calculate final battle results. The client should:
 - for move purchases, unlock the referenced `moveId` from `moveRegistry`
 - pick one move from `learnableMoves` after each victory if that is part of your flow
 - keep the equipped move list to a max of 4 moves
+- keep the equipped item list to a max of 4 items
+- track hero inventory separately from equipped items
+- apply item effects only as buffs/debuffs to `self` or `opponent`
+- keep equipped item effects active for the whole battle instead of expiring after turns
+- when an equipped item modifies `health`, apply it as a max-Health bonus while equipped
+- when a monster dies, grant or drop its `equippedItems` and `inventoryItems` based on your loot flow
+- when the hero dies, remove the hero's equipped and inventory items because items are losable
 - when using endless mode, request the next encounter from the server instead of generating or scaling monsters locally
 
 ## Error Responses

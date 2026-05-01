@@ -15,6 +15,11 @@ export type StatModifier = {
   durationTurns: number;
 };
 
+export type ItemStatModifier = {
+  stat: UpgradeableStatKey;
+  value: number;
+};
+
 export type MoveType = "physical" | "magic" | "status";
 
 export type MoveEffect =
@@ -42,12 +47,27 @@ export type Move = {
 
 export type MoveRegistry = Record<string, Move>;
 
+export type ItemTarget = MoveTarget;
+
+export type Item = {
+  id: string;
+  name: string;
+  description: string;
+  spriteKey: string;
+  target: ItemTarget;
+  statModifier: ItemStatModifier;
+};
+
+export type ItemRegistry = Record<string, Item>;
+
 export type Monster = {
   id: string;
   name: string;
   description: string;
   stats: Stats;
   moves: string[];
+  equippedItems: string[];
+  inventoryItems: string[];
   learnableMoves: string[];
   xpReward: number;
   coinReward: number;
@@ -85,6 +105,8 @@ export type HeroDefaults = {
   baseStats: Stats;
   statsPerLevel: Stats;
   moves: string[];
+  equippedItems: string[];
+  inventoryItems: string[];
 };
 
 export type ShopItemBase = {
@@ -120,6 +142,7 @@ export type RunConfig = {
   coinRewardScaling: CoinRewardScaling;
   shopItems: ShopItem[];
   moveRegistry: MoveRegistry;
+  itemRegistry: ItemRegistry;
 };
 
 export type BattleState = {

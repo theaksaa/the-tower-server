@@ -2,6 +2,8 @@ import type {
   CoinRewardScaling,
   EndlessModeConfig,
   HeroDefaults,
+  Item,
+  ItemRegistry,
   LevelProgression,
   Monster,
   Move,
@@ -13,6 +15,10 @@ import type {
 } from "./types.js";
 
 type MoveDefinition = Omit<Move, "spriteKey"> & {
+  spriteKey?: string;
+};
+
+type ItemDefinition = Omit<Item, "spriteKey"> & {
   spriteKey?: string;
 };
 
@@ -41,6 +47,19 @@ const createMoveRegistry = (
     ])
   );
 
+const createItemRegistry = (
+  definitions: Record<string, ItemDefinition>
+): ItemRegistry =>
+  Object.fromEntries(
+    Object.entries(definitions).map(([itemId, item]) => [
+      itemId,
+      {
+        ...item,
+        spriteKey: item.spriteKey ?? itemId
+      }
+    ])
+  );
+
 const knightHero: HeroDefaults = {
   id: "knight",
   name: "Knight",
@@ -48,7 +67,9 @@ const knightHero: HeroDefaults = {
   spriteKey: "knight",
   baseStats: createStats(120, 18, 10, 12),
   statsPerLevel: createStats(18, 4, 3, 3),
-  moves: ["slash", "shield_up", "battle_cry", "second_wind"]
+  moves: ["slash", "shield_up", "battle_cry", "second_wind"],
+  equippedItems: ["iron_blade", "tower_bulwark"],
+  inventoryItems: ["field_tonic"]
 };
 
 export const heroes: HeroDefaults[] = [
@@ -60,7 +81,9 @@ export const heroes: HeroDefaults[] = [
     spriteKey: "solider",
     baseStats: createStats(132, 22, 7, 8),
     statsPerLevel: createStats(20, 5, 2, 2),
-    moves: ["slash", "battle_cry", "headbutt", "second_wind"]
+    moves: ["slash", "battle_cry", "headbutt", "second_wind"],
+    equippedItems: ["war_drum", "spiked_band"],
+    inventoryItems: []
   },
   {
     id: "spellblade",
@@ -69,7 +92,9 @@ export const heroes: HeroDefaults[] = [
     spriteKey: "priest",
     baseStats: createStats(108, 15, 9, 18),
     statsPerLevel: createStats(16, 3, 2, 4),
-    moves: ["slash", "firebolt", "arcane_surge", "second_wind"]
+    moves: ["slash", "firebolt", "arcane_surge", "second_wind"],
+    equippedItems: ["ember_charm", "warding_orb"],
+    inventoryItems: ["field_tonic"]
   }
 ];
 
@@ -439,6 +464,119 @@ export const moveRegistry: MoveRegistry = createMoveRegistry({
   }
 });
 
+export const itemRegistry: ItemRegistry = createItemRegistry({
+  iron_blade: {
+    id: "iron_blade",
+    name: "Iron Blade",
+    description: "Lowers the target's Defense while equipped.",
+    spriteKey: "iron_blade",
+    target: "opponent",
+    statModifier: {
+      stat: "defense",
+      value: -5
+    }
+  },
+  tower_bulwark: {
+    id: "tower_bulwark",
+    name: "Tower Bulwark",
+    description: "Raises the user's Defense while equipped.",
+    spriteKey: "tower_bulwark",
+    target: "self",
+    statModifier: {
+      stat: "defense",
+      value: 7
+    }
+  },
+  field_tonic: {
+    id: "field_tonic",
+    name: "Field Tonic",
+    description: "Raises the user's max Health while equipped.",
+    spriteKey: "field_tonic",
+    target: "self",
+    statModifier: {
+      stat: "health",
+      value: 18
+    }
+  },
+  war_drum: {
+    id: "war_drum",
+    name: "War Drum",
+    description: "Raises the user's Attack while equipped.",
+    spriteKey: "war_drum",
+    target: "self",
+    statModifier: {
+      stat: "attack",
+      value: 7
+    }
+  },
+  spiked_band: {
+    id: "spiked_band",
+    name: "Spiked Band",
+    description: "Lowers the target's Attack while equipped.",
+    spriteKey: "spiked_band",
+    target: "opponent",
+    statModifier: {
+      stat: "attack",
+      value: -6
+    }
+  },
+  ember_charm: {
+    id: "ember_charm",
+    name: "Ember Charm",
+    description: "Lowers the target's Attack while equipped.",
+    spriteKey: "ember_charm",
+    target: "opponent",
+    statModifier: {
+      stat: "attack",
+      value: -5
+    }
+  },
+  warding_orb: {
+    id: "warding_orb",
+    name: "Warding Orb",
+    description: "Raises the user's Magic while equipped.",
+    spriteKey: "warding_orb",
+    target: "self",
+    statModifier: {
+      stat: "magic",
+      value: 7
+    }
+  },
+  cracked_totem: {
+    id: "cracked_totem",
+    name: "Cracked Totem",
+    description: "Lowers the target's Defense while equipped.",
+    spriteKey: "cracked_totem",
+    target: "opponent",
+    statModifier: {
+      stat: "defense",
+      value: -4
+    }
+  },
+  witch_lantern: {
+    id: "witch_lantern",
+    name: "Witch Lantern",
+    description: "Lowers the target's Magic while equipped.",
+    spriteKey: "witch_lantern",
+    target: "opponent",
+    statModifier: {
+      stat: "magic",
+      value: -6
+    }
+  },
+  dragon_scale_relic: {
+    id: "dragon_scale_relic",
+    name: "Dragon Scale Relic",
+    description: "Raises the user's Defense while equipped.",
+    spriteKey: "dragon_scale_relic",
+    target: "self",
+    statModifier: {
+      stat: "defense",
+      value: 8
+    }
+  }
+});
+
 function createStatShopItem(
   id: string,
   name: string,
@@ -494,6 +632,8 @@ export const encounters: Monster[] = [
       "A scrappy fighter who wins through cheap shots and reckless aggression.",
     stats: createStats(70, 15, 7, 4),
     moves: ["rusty_blade", "dirty_kick", "frenzy", "headbutt"],
+    equippedItems: ["cracked_totem"],
+    inventoryItems: [],
     learnableMoves: ["rusty_blade", "dirty_kick", "frenzy", "headbutt"],
     xpReward: 80,
     coinReward: 40,
@@ -505,6 +645,8 @@ export const encounters: Monster[] = [
     description: "A patient hunter that weakens armor before going for the kill.",
     stats: createStats(95, 18, 10, 5),
     moves: ["bite", "web_throw", "pounce", "skitter"],
+    equippedItems: ["field_tonic"],
+    inventoryItems: [],
     learnableMoves: ["bite", "web_throw", "pounce", "skitter"],
     xpReward: 110,
     coinReward: 55,
@@ -516,6 +658,8 @@ export const encounters: Monster[] = [
     description: "A volatile caster that alternates between wards and hexes.",
     stats: createStats(88, 8, 8, 18),
     moves: ["firebolt", "arcane_surge", "mana_drain", "hex_shield"],
+    equippedItems: ["ember_charm", "warding_orb"],
+    inventoryItems: [],
     learnableMoves: ["firebolt", "arcane_surge", "mana_drain", "hex_shield"],
     xpReward: 140,
     coinReward: 70,
@@ -527,6 +671,8 @@ export const encounters: Monster[] = [
     description: "An old battlefield sorcerer who steals life to stay upright.",
     stats: createStats(105, 7, 10, 22),
     moves: ["shadow_bolt", "drain_life", "curse", "dark_pact"],
+    equippedItems: ["witch_lantern"],
+    inventoryItems: ["field_tonic"],
     learnableMoves: ["shadow_bolt", "drain_life", "curse", "dark_pact"],
     xpReward: 180,
     coinReward: 90,
@@ -538,6 +684,8 @@ export const encounters: Monster[] = [
     description: "An ancient apex predator with crushing force and searing flame.",
     stats: createStats(170, 24, 18, 24),
     moves: ["flame_breath", "claw_swipe", "intimidate", "dragon_scales"],
+    equippedItems: ["dragon_scale_relic"],
+    inventoryItems: ["field_tonic"],
     learnableMoves: ["flame_breath", "claw_swipe", "intimidate", "dragon_scales"],
     xpReward: 250,
     coinReward: 125,
@@ -614,4 +762,8 @@ export const shopItems: ShopItem[] = [
 
 export function getMove(moveId: string): Move | undefined {
   return moveRegistry[moveId];
+}
+
+export function getItem(itemId: string): Item | undefined {
+  return itemRegistry[itemId];
 }

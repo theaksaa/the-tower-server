@@ -3,6 +3,7 @@ import {
   coinRewardScaling,
   endlessMode,
   encounters,
+  itemRegistry,
   getMove,
   heroes,
   levelProgression,
@@ -106,7 +107,8 @@ export function createGameEngine(): GameEngine {
         xpRewardScaling,
         coinRewardScaling,
         shopItems,
-        moveRegistry
+        moveRegistry,
+        itemRegistry
       };
     },
     createNextEncounter(encountersCleared) {

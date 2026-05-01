@@ -88,7 +88,9 @@ GET /run/config
       "spriteKey": "hero_knight",
       "baseStats": { ...Stats },
       "statsPerLevel": { ...Stats },
-      "moves": ["move_id", "move_id", "move_id", "move_id"]
+      "moves": ["move_id", "move_id", "move_id", "move_id"],
+      "equippedItems": ["item_id"],
+      "inventoryItems": ["item_id"]
     }
   ],
   "levelProgression": {
@@ -136,6 +138,10 @@ GET /run/config
   "moveRegistry": {
     "move_id": { ...Move },
     "move_id": { ...Move }
+  },
+  "itemRegistry": {
+    "item_id": { ...Item },
+    "item_id": { ...Item }
   }
 }
 ```
@@ -231,6 +237,7 @@ All fields are required unless marked optional.
 | `coinRewardScaling` | `CoinRewardScaling` | Global settings for reducing monster coin rewards after each kill. |
 | `shopItems` | `ShopItem[]` | Shop entries for permanent stat upgrades and move unlocks. |
 | `moveRegistry` | `Record<string, Move>` | All moves in the game, keyed by move ID. |
+| `itemRegistry` | `Record<string, Item>` | All items in the game, keyed by item ID. |
 
 ### EndlessModeConfig
 
@@ -268,6 +275,8 @@ All fields are required unless marked optional.
 | `baseStats` | `Stats` | Stats at level 1. |
 | `statsPerLevel` | `Stats` | Flat stat increase applied on each level-up. |
 | `moves` | `string[]` | Move IDs in the hero's starting equipped moveset (4 moves). |
+| `equippedItems` | `string[]` | Item IDs in the hero's starting equipped item set (max 4). |
+| `inventoryItems` | `string[]` | Item IDs the hero owns but does not start equipped. |
 
 ### Stats
 
@@ -298,6 +307,8 @@ Applies to both heroes and monsters.
 | `description` | `string` | Flavour text shown to the player. |
 | `stats` | `Stats` | Fixed stats. Monsters do not level up. |
 | `moves` | `string[]` | Move IDs this monster can use in battle. |
+| `equippedItems` | `string[]` | Item IDs the monster has equipped (max 4). |
+| `inventoryItems` | `string[]` | Item IDs the monster is carrying but not using. |
 | `learnableMoves` | `string[]` | Move IDs the hero can learn upon winning. One is chosen at random by the client. |
 | `xpReward` | `number` | XP awarded to the hero on victory. |
 | `coinReward` | `number` | Base coins awarded for killing this monster before decay is applied. |
@@ -310,6 +321,8 @@ Applies to both heroes and monsters.
   "description": "A scrappy fighter who wins through cheap shots and reckless aggression.",
   "stats": { "health": 70, "attack": 15, "defense": 7, "magic": 4 },
   "moves": ["rusty_blade", "dirty_kick", "frenzy", "headbutt"],
+  "equippedItems": ["cracked_totem"],
+  "inventoryItems": [],
   "learnableMoves": ["rusty_blade", "dirty_kick", "frenzy", "headbutt"],
   "xpReward": 80,
   "coinReward": 40,
@@ -435,6 +448,26 @@ Examples:
 
 This means the implementation does not need a separate `operation` field. A buff is just a positive `value`; a debuff is just a negative `value`.
 
+### Item
+
+`Item` is a stat-only battle modifier:
+
+```ts
+type Item = {
+  id: string;
+  name: string;
+  description: string;
+  spriteKey: string;
+  target: "self" | "opponent";
+  statModifier: {
+    stat: "health" | "attack" | "defense" | "magic";
+    value: number;
+  };
+};
+```
+
+Items never deal damage, heal, or drain. They only buff or debuff `self` or `opponent`, and their effect stays active for the whole battle while equipped. Items can also modify `health`, which the client should treat as max Health. Items live in `equippedItems` or `inventoryItems`, can be dropped by monsters, and are lost if the hero dies.
+
 ### BattleState
 
 Sent by the client to `/battle/monster-move` each turn.
@@ -549,12 +582,17 @@ Positive modifier values are buffs. Negative modifier values are debuffs. Buff a
 
 - The client selects one entry from `heroes` at the start of the run.
 - The chosen hero starts at **Level 1** with that hero's `baseStats` and `moves`.
+- The chosen hero also starts with that hero's default `equippedItems` and `inventoryItems`.
 - Each battle awards XP. Start from `monster.xpReward`, then reduce it by `xpRewardScaling.multiplierPerKill` for each monster already killed in the run, never going below `xpRewardScaling.minimumReward`.
 - Each battle also awards coins. Start from `monster.coinReward`, then reduce it by `coinRewardScaling.multiplierPerKill` for each monster already killed in the run, never going below `coinRewardScaling.minimumReward`.
 - When accumulated XP reaches the current next-level requirement from `levelProgression`, the hero levels up.
 - On level-up, each stat increases by the corresponding value in the chosen hero's `statsPerLevel`.
 - The hero can equip up to **4 moves** at a time, chosen from all moves they have learned.
+- The hero can equip up to **4 items** at a time, chosen from the items they currently own.
+- Equipped item effects stay active for the whole battle and do not expire after turns.
+- If an equipped item modifies `health`, the client should apply it as a max-Health bonus while that item remains equipped.
 - After winning a battle, one of `monster.learnableMoves` is selected at random and added to the hero's learned pool. The player then decides whether to equip it before the next fight.
+- If the monster dies, the client can award that monster's `equippedItems` and `inventoryItems` as drops. If the hero dies, the hero loses their items.
 
 ---
 
@@ -692,6 +730,6 @@ The schema is designed to accommodate the Game Designer's backlog with minimal b
 | **Save & Exit (#5)** | Store `runId` + hero state in persistent storage server-side. Add `GET /run/{runId}` to resume. |
 | **Battle log (#6)** | `MonsterMoveResponse` can include an optional `logEntry: string` the server generates from the move result. |
 | **Smarter bot (#8)** | Change the selection logic inside `/battle/monster-move` only. Schema unchanged. |
-| **Items (#9)** | Add `itemDrops?: Item[]` to `Monster`. Add `Item` schema alongside `Move`. |
+| **Items (#9)** | Implemented via `itemRegistry`, `equippedItems`, and `inventoryItems` on heroes and monsters. |
 | **Non-linear map (#12)** | Change `encounters` from `Monster[]` to a graph structure: `nodes: MonsterNode[]`, `edges: { from: string, to: string }[]`. |
 | **Hero classes (#15)** | Already covered by the `heroes` array in `GET /run/config`; expand it with more variants as needed. |
