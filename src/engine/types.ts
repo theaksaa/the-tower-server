@@ -60,10 +60,34 @@ export type Item = {
 
 export type ItemRegistry = Record<string, Item>;
 
+export type EnvironmentTurnEffectType = "damage" | "heal";
+
+export type EnvironmentTurnEffect = {
+  type: EnvironmentTurnEffectType;
+  value: number;
+};
+
+export type EnvironmentSideEffects = {
+  statModifiers: Partial<Record<UpgradeableStatKey, number>>;
+  turnEffect: EnvironmentTurnEffect | null;
+};
+
+export type Environment = {
+  id: string;
+  name: string;
+  description: string;
+  spriteKey: string;
+  heroEffects: EnvironmentSideEffects;
+  monsterEffects: EnvironmentSideEffects;
+};
+
+export type EnvironmentRegistry = Record<string, Environment>;
+
 export type Monster = {
   id: string;
   name: string;
   description: string;
+  environmentId: string;
   stats: Stats;
   moves: string[];
   equippedItems: string[];
@@ -149,6 +173,7 @@ export type RunConfig = {
   shopItems: ShopItem[];
   moveRegistry: MoveRegistry;
   itemRegistry: ItemRegistry;
+  environmentRegistry: EnvironmentRegistry;
 };
 
 export type BattleState = {

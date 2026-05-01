@@ -1,6 +1,8 @@
 import type {
   CoinRewardScaling,
   EndlessModeConfig,
+  Environment,
+  EnvironmentRegistry,
   HeroDefaults,
   Item,
   ItemRegistry,
@@ -19,6 +21,10 @@ type MoveDefinition = Omit<Move, "spriteKey"> & {
 };
 
 type ItemDefinition = Omit<Item, "spriteKey"> & {
+  spriteKey?: string;
+};
+
+type EnvironmentDefinition = Omit<Environment, "spriteKey"> & {
   spriteKey?: string;
 };
 
@@ -56,6 +62,19 @@ const createItemRegistry = (
       {
         ...item,
         spriteKey: item.spriteKey ?? itemId
+      }
+    ])
+  );
+
+const createEnvironmentRegistry = (
+  definitions: Record<string, EnvironmentDefinition>
+): EnvironmentRegistry =>
+  Object.fromEntries(
+    Object.entries(definitions).map(([environmentId, environment]) => [
+      environmentId,
+      {
+        ...environment,
+        spriteKey: environment.spriteKey ?? environmentId
       }
     ])
   );
@@ -577,6 +596,111 @@ export const itemRegistry: ItemRegistry = createItemRegistry({
   }
 });
 
+export const environmentRegistry: EnvironmentRegistry = createEnvironmentRegistry({
+  ruined_keep: {
+    id: "ruined_keep",
+    name: "Ruined Keep",
+    description:
+      "Broken walls and old war banners harden both fighters for a longer brawl.",
+    spriteKey: "bg_ruined_keep",
+    heroEffects: {
+      statModifiers: {
+        defense: 2
+      },
+      turnEffect: null
+    },
+    monsterEffects: {
+      statModifiers: {
+        defense: 3
+      },
+      turnEffect: null
+    }
+  },
+  venom_nest: {
+    id: "venom_nest",
+    name: "Venom Nest",
+    description:
+      "The air is toxic. Both hero and monster take a little damage every turn.",
+    spriteKey: "bg_venom_nest",
+    heroEffects: {
+      statModifiers: {},
+      turnEffect: {
+        type: "damage",
+        value: 4
+      }
+    },
+    monsterEffects: {
+      statModifiers: {},
+      turnEffect: {
+        type: "damage",
+        value: 4
+      }
+    }
+  },
+  arcane_library: {
+    id: "arcane_library",
+    name: "Arcane Library",
+    description:
+      "Loose mana floods the room, empowering spells for both combatants.",
+    spriteKey: "bg_arcane_library",
+    heroEffects: {
+      statModifiers: {
+        magic: 5
+      },
+      turnEffect: null
+    },
+    monsterEffects: {
+      statModifiers: {
+        magic: 5
+      },
+      turnEffect: null
+    }
+  },
+  moonwell: {
+    id: "moonwell",
+    name: "Moonwell",
+    description:
+      "A calm ritual pool restores a little health to both sides each turn.",
+    spriteKey: "bg_moonwell",
+    heroEffects: {
+      statModifiers: {},
+      turnEffect: {
+        type: "heal",
+        value: 5
+      }
+    },
+    monsterEffects: {
+      statModifiers: {},
+      turnEffect: {
+        type: "heal",
+        value: 5
+      }
+    }
+  },
+  dragon_lair: {
+    id: "dragon_lair",
+    name: "Dragon Lair",
+    description:
+      "Ancient heat favors raw power, but the beast still benefits more from home ground.",
+    spriteKey: "bg_dragon_lair",
+    heroEffects: {
+      statModifiers: {
+        attack: 2,
+        defense: 1
+      },
+      turnEffect: null
+    },
+    monsterEffects: {
+      statModifiers: {
+        attack: 5,
+        magic: 4,
+        defense: 2
+      },
+      turnEffect: null
+    }
+  }
+});
+
 function createStatShopItem(
   id: string,
   name: string,
@@ -655,6 +779,7 @@ export const encounters: Monster[] = [
     name: "Goblin Warrior",
     description:
       "A scrappy fighter who wins through cheap shots and reckless aggression.",
+    environmentId: "ruined_keep",
     stats: createStats(70, 15, 7, 4),
     moves: ["rusty_blade", "dirty_kick", "frenzy", "headbutt"],
     equippedItems: ["cracked_totem"],
@@ -668,6 +793,7 @@ export const encounters: Monster[] = [
     id: "giant_spider",
     name: "Giant Spider",
     description: "A patient hunter that weakens armor before going for the kill.",
+    environmentId: "venom_nest",
     stats: createStats(95, 18, 10, 5),
     moves: ["bite", "web_throw", "pounce", "skitter"],
     equippedItems: ["field_tonic"],
@@ -681,6 +807,7 @@ export const encounters: Monster[] = [
     id: "goblin_mage",
     name: "Goblin Mage",
     description: "A volatile caster that alternates between wards and hexes.",
+    environmentId: "arcane_library",
     stats: createStats(88, 8, 8, 18),
     moves: ["firebolt", "arcane_surge", "mana_drain", "hex_shield"],
     equippedItems: ["ember_charm", "warding_orb"],
@@ -694,6 +821,7 @@ export const encounters: Monster[] = [
     id: "witch",
     name: "Witch",
     description: "An old battlefield sorcerer who steals life to stay upright.",
+    environmentId: "moonwell",
     stats: createStats(105, 7, 10, 22),
     moves: ["shadow_bolt", "drain_life", "curse", "dark_pact"],
     equippedItems: ["witch_lantern"],
@@ -707,6 +835,7 @@ export const encounters: Monster[] = [
     id: "dragon",
     name: "Dragon",
     description: "An ancient apex predator with crushing force and searing flame.",
+    environmentId: "dragon_lair",
     stats: createStats(170, 24, 18, 24),
     moves: ["flame_breath", "claw_swipe", "intimidate", "dragon_scales"],
     equippedItems: ["dragon_scale_relic"],
@@ -812,4 +941,8 @@ export function getMove(moveId: string): Move | undefined {
 
 export function getItem(itemId: string): Item | undefined {
   return itemRegistry[itemId];
+}
+
+export function getEnvironment(environmentId: string): Environment | undefined {
+  return environmentRegistry[environmentId];
 }

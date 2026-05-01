@@ -37,6 +37,7 @@ No params, no body.
       "id": "goblin_warrior",
       "name": "Goblin Warrior",
       "description": "A scrappy fighter who wins through cheap shots and reckless aggression.",
+      "environmentId": "ruined_keep",
       "stats": {
         "health": 70,
         "attack": 15,
@@ -196,6 +197,26 @@ No params, no body.
         "value": -5
       }
     }
+  },
+  "environmentRegistry": {
+    "ruined_keep": {
+      "id": "ruined_keep",
+      "name": "Ruined Keep",
+      "description": "Broken walls and old war banners harden both fighters for a longer brawl.",
+      "spriteKey": "bg_ruined_keep",
+      "heroEffects": {
+        "statModifiers": {
+          "defense": 2
+        },
+        "turnEffect": null
+      },
+      "monsterEffects": {
+        "statModifiers": {
+          "defense": 3
+        },
+        "turnEffect": null
+      }
+    }
   }
 }
 ```
@@ -209,6 +230,8 @@ No params, no body.
 - initialize the hero's equipped and inventory items from `equippedItems` and `inventoryItems`
 - use `hero.spriteKey` and `move.spriteKey` to resolve art/icons in the client
 - use `item.spriteKey` to resolve item art/icons in the client
+- use `monster.environmentId` to resolve the active battlefield from `environmentRegistry`
+- use `environment.spriteKey` as the battle background asset key
 - use `levelProgression` to calculate how much XP is needed for each next level with no max level cap
 - if `endlessMode.enabled` is `true`, call `POST /run/next-encounter` whenever you need the next endless battle
 - use `xpRewardScaling` with each monster's `xpReward` to calculate how much XP a kill gives as the run goes on
@@ -219,6 +242,9 @@ No params, no body.
 - respect `repeatable` so one-time purchases cannot be bought again
 - use `moveRegistry[moveId]` whenever you need full move details in battle UI, tooltips, or resolution logic
 - use `itemRegistry[itemId]` whenever you need full item details in battle UI, tooltips, equipment, inventory, or drops
+- apply `environmentRegistry[monster.environmentId].heroEffects` to the hero for the whole battle
+- apply `environmentRegistry[monster.environmentId].monsterEffects` to the monster for the whole battle
+- trigger environment `turnEffect` once per turn for each side when present
 - treat items as losable inventory/equipment objects: when a monster dies, drop its items; when the hero dies, remove the hero's items
 
 ### `POST /run/next-encounter`
@@ -252,6 +278,7 @@ Content-Type: application/json
     "id": "goblin_warrior_endless_2",
     "name": "Goblin Warrior +1",
     "description": "A scrappy fighter who wins through cheap shots and reckless aggression. Empowered by endless ascent.",
+    "environmentId": "ruined_keep",
     "stats": {
       "health": 84,
       "attack": 17,
@@ -438,6 +465,7 @@ type Monster = {
   id: string;
   name: string;
   description: string;
+  environmentId: string;
   stats: Stats;
   moves: string[];
   equippedItems: string[];
@@ -451,6 +479,30 @@ type Monster = {
 
 - monsters can have up to 4 equipped items at a time
 - if the monster dies, the client can drop both `equippedItems` and `inventoryItems`
+
+### `Environment`
+
+```ts
+type Environment = {
+  id: string;
+  name: string;
+  description: string;
+  spriteKey: string;
+  heroEffects: {
+    statModifiers: Partial<Record<"health" | "attack" | "defense" | "magic", number>>;
+    turnEffect: { type: "damage" | "heal"; value: number } | null;
+  };
+  monsterEffects: {
+    statModifiers: Partial<Record<"health" | "attack" | "defense" | "magic", number>>;
+    turnEffect: { type: "damage" | "heal"; value: number } | null;
+  };
+};
+```
+
+- `spriteKey` is the asset key for the environment background
+- environment stat modifiers last for the whole battle
+- `turnEffect.type === "damage"` subtracts HP each turn
+- `turnEffect.type === "heal"` restores HP each turn up to max HP
 
 ### `CoinRewardScaling`
 
@@ -573,6 +625,7 @@ type RunConfig = {
   shopItems: ShopItem[];
   moveRegistry: Record<string, Move>;
   itemRegistry: Record<string, Item>;
+  environmentRegistry: Record<string, Environment>;
 };
 ```
 
@@ -596,6 +649,7 @@ type BattleState = {
 The server does not calculate final battle results. The client should:
 
 - resolve move damage, move healing, move drain, and all stat modifiers locally
+- resolve environment stat modifiers and environment turn effects locally
 - track current HP for both sides
 - track temporary buffs/debuffs and remove them after `durationTurns`
 - award XP after a win with a formula like `Math.max(minimumReward, Math.round(monster.xpReward * multiplierPerKill ** monstersKilledSoFar))`

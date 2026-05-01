@@ -152,6 +152,9 @@ GET /run/config
   "itemRegistry": {
     "item_id": { ...Item },
     "item_id": { ...Item }
+  },
+  "environmentRegistry": {
+    "environment_id": { ...Environment }
   }
 }
 ```
@@ -159,6 +162,8 @@ GET /run/config
 The `moveRegistry` contains every move that exists in the game — both hero defaults and all monster moves. The client uses this to look up move details anywhere in the UI without a separate request.
 
 `shopItems` contains permanent stat upgrades, move unlocks, and inventory item purchases for the client shop. Move shop entries always reference a valid move in `moveRegistry`, item shop entries always reference a valid item in `itemRegistry`, and `repeatable` tells the client whether the player can buy that item again.
+
+`environmentRegistry` contains every battlefield environment. Each monster references one via `environmentId`, and the client should apply that environment's stat modifiers for the whole battle plus any per-turn damage or healing.
 
 `levelProgression` defines infinite hero leveling. XP needed to go from level `N` to level `N + 1` is `baseXpForNextLevel + (N - 1) * additionalXpPerLevel`.
 
@@ -248,6 +253,30 @@ All fields are required unless marked optional.
 | `shopItems` | `ShopItem[]` | Shop entries for permanent stat upgrades, move unlocks, and item purchases. |
 | `moveRegistry` | `Record<string, Move>` | All moves in the game, keyed by move ID. |
 | `itemRegistry` | `Record<string, Item>` | All items in the game, keyed by item ID. |
+| `environmentRegistry` | `Record<string, Environment>` | All environments in the game, keyed by environment ID. |
+
+### Environment
+
+`Environment` defines passive battlefield effects for each side:
+
+```ts
+type Environment = {
+  id: string;
+  name: string;
+  description: string;
+  spriteKey: string;
+  heroEffects: {
+    statModifiers: Partial<Record<"health" | "attack" | "defense" | "magic", number>>;
+    turnEffect: { type: "damage" | "heal"; value: number } | null;
+  };
+  monsterEffects: {
+    statModifiers: Partial<Record<"health" | "attack" | "defense" | "magic", number>>;
+    turnEffect: { type: "damage" | "heal"; value: number } | null;
+  };
+};
+```
+
+`spriteKey` is the asset key for the environment background. Environment stat modifiers last for the whole battle. `turnEffect` should be applied once per turn to that side.
 
 ### EndlessModeConfig
 
@@ -316,6 +345,7 @@ Applies to both heroes and monsters.
 | `id` | `string` | Unique identifier (e.g. `"goblin_scout"`). |
 | `name` | `string` | Display name. |
 | `description` | `string` | Flavour text shown to the player. |
+| `environmentId` | `string` | Environment used for this battle. Look it up in `environmentRegistry`. |
 | `stats` | `Stats` | Fixed stats. Monsters do not level up. |
 | `moves` | `string[]` | Move IDs this monster can use in battle. |
 | `equippedItems` | `string[]` | Item IDs the monster has equipped (max 4). |
@@ -330,6 +360,7 @@ Applies to both heroes and monsters.
   "id": "goblin_warrior",
   "name": "Goblin Warrior",
   "description": "A scrappy fighter who wins through cheap shots and reckless aggression.",
+  "environmentId": "ruined_keep",
   "stats": { "health": 70, "attack": 15, "defense": 7, "magic": 4 },
   "moves": ["rusty_blade", "dirty_kick", "frenzy", "headbutt"],
   "equippedItems": ["cracked_totem"],
@@ -602,6 +633,9 @@ Positive modifier values are buffs. Negative modifier values are debuffs. Buff a
 - The hero can equip up to **4 items** at a time, chosen from the items they currently own.
 - Equipped item effects stay active for the whole battle and do not expire after turns.
 - If an equipped item modifies `health`, the client should apply it as a max-Health bonus while that item remains equipped.
+- The client should also apply the active environment from `environmentRegistry[monster.environmentId]`.
+- Environment stat modifiers last for the whole battle.
+- Environment turn effects trigger once per turn for the hero and monster independently.
 - After winning a battle, one of `monster.learnableMoves` is selected at random and added to the hero's learned pool. The player then decides whether to equip it before the next fight.
 - If the monster dies, the client can award that monster's `equippedItems` and `inventoryItems` as drops. If the hero dies, the hero loses their items.
 
@@ -742,5 +776,6 @@ The schema is designed to accommodate the Game Designer's backlog with minimal b
 | **Battle log (#6)** | `MonsterMoveResponse` can include an optional `logEntry: string` the server generates from the move result. |
 | **Smarter bot (#8)** | Change the selection logic inside `/battle/monster-move` only. Schema unchanged. |
 | **Items (#9)** | Implemented via `itemRegistry`, `equippedItems`, and `inventoryItems` on heroes and monsters. |
+| **Environments** | Implemented via `environmentRegistry` plus `monster.environmentId`. |
 | **Non-linear map (#12)** | Change `encounters` from `Monster[]` to a graph structure: `nodes: MonsterNode[]`, `edges: { from: string, to: string }[]`. |
 | **Hero classes (#15)** | Already covered by the `heroes` array in `GET /run/config`; expand it with more variants as needed. |
