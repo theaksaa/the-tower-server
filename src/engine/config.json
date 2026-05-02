@@ -1,0 +1,1578 @@
+{
+  "levelProgression": {
+    "baseXpForNextLevel": 115,
+    "additionalXpPerLevel": 65
+  },
+  "endlessMode": {
+    "enabled": true,
+    "encountersPerLoop": 5,
+    "healthMultiplierPerLoop": 1.22,
+    "statMultiplierPerLoop": 1.11,
+    "rewardMultiplierPerLoop": 1.3
+  },
+  "xpRewardScaling": {
+    "multiplierPerKill": 0.97,
+    "minimumReward": 45
+  },
+  "coinRewardScaling": {
+    "multiplierPerKill": 0.93,
+    "minimumReward": 18
+  },
+  "moveRegistry": {
+    "slash": {
+      "id": "slash",
+      "name": "Slash",
+      "description": "Reliable physical damage.",
+      "type": "physical",
+      "effect": "damage",
+      "target": "opponent",
+      "basePower": 10,
+      "statMultiplier": 0.75,
+      "statModifier": null,
+      "hpCost": null,
+      "spriteKey": "slash"
+    },
+    "shield_up": {
+      "id": "shield_up",
+      "name": "Shield Up",
+      "description": "Raises the user's Defense for three turns.",
+      "type": "status",
+      "effect": "stat_modifier",
+      "target": "self",
+      "basePower": 0,
+      "statMultiplier": 0,
+      "statModifier": {
+        "stat": "defense",
+        "value": 3,
+        "durationTurns": 3
+      },
+      "hpCost": null,
+      "spriteKey": "shield_up"
+    },
+    "battle_cry": {
+      "id": "battle_cry",
+      "name": "Battle Cry",
+      "description": "Raises the user's Attack for three turns.",
+      "type": "status",
+      "effect": "stat_modifier",
+      "target": "self",
+      "basePower": 0,
+      "statMultiplier": 0,
+      "statModifier": {
+        "stat": "attack",
+        "value": 3,
+        "durationTurns": 3
+      },
+      "hpCost": null,
+      "spriteKey": "battle_cry"
+    },
+    "second_wind": {
+      "id": "second_wind",
+      "name": "Second Wind",
+      "description": "Small heal that scales with Magic.",
+      "type": "magic",
+      "effect": "heal",
+      "target": "self",
+      "basePower": 10,
+      "statMultiplier": 0.55,
+      "statModifier": null,
+      "hpCost": null,
+      "spriteKey": "second_wind"
+    },
+    "basic_heal": {
+      "id": "basic_heal",
+      "name": "Basic Heal",
+      "description": "Small heal. Useful, but not strong enough to stall forever.",
+      "type": "magic",
+      "effect": "heal",
+      "target": "self",
+      "basePower": 9,
+      "statMultiplier": 0.45,
+      "statModifier": null,
+      "hpCost": null,
+      "spriteKey": "basic_heal"
+    },
+    "goblin_patch": {
+      "id": "goblin_patch",
+      "name": "Goblin Patch",
+      "description": "Small self-heal.",
+      "type": "magic",
+      "effect": "heal",
+      "target": "self",
+      "basePower": 7,
+      "statMultiplier": 0.3,
+      "statModifier": null,
+      "hpCost": null,
+      "spriteKey": "goblin_patch"
+    },
+    "cocoon_rest": {
+      "id": "cocoon_rest",
+      "name": "Cocoon Rest",
+      "description": "Small self-heal.",
+      "type": "magic",
+      "effect": "heal",
+      "target": "self",
+      "basePower": 8,
+      "statMultiplier": 0.3,
+      "statModifier": null,
+      "hpCost": null,
+      "spriteKey": "cocoon_rest"
+    },
+    "dark_mend": {
+      "id": "dark_mend",
+      "name": "Dark Mend",
+      "description": "Small magic heal.",
+      "type": "magic",
+      "effect": "heal",
+      "target": "self",
+      "basePower": 9,
+      "statMultiplier": 0.4,
+      "statModifier": null,
+      "hpCost": null,
+      "spriteKey": "dark_mend"
+    },
+    "witch_brew": {
+      "id": "witch_brew",
+      "name": "Witch Brew",
+      "description": "Medium magic heal.",
+      "type": "magic",
+      "effect": "heal",
+      "target": "self",
+      "basePower": 10,
+      "statMultiplier": 0.45,
+      "statModifier": null,
+      "hpCost": null,
+      "spriteKey": "witch_brew"
+    },
+    "dragon_regen": {
+      "id": "dragon_regen",
+      "name": "Dragon Regen",
+      "description": "Medium self-heal for the final boss.",
+      "type": "magic",
+      "effect": "heal",
+      "target": "self",
+      "basePower": 12,
+      "statMultiplier": 0.45,
+      "statModifier": null,
+      "hpCost": null,
+      "spriteKey": "dragon_regen"
+    },
+    "quick_shot": {
+      "id": "quick_shot",
+      "name": "Quick Shot",
+      "description": "Light physical damage.",
+      "type": "physical",
+      "effect": "damage",
+      "target": "opponent",
+      "basePower": 8,
+      "statMultiplier": 0.7,
+      "statModifier": null,
+      "hpCost": null,
+      "spriteKey": "quick_shot"
+    },
+    "piercing_arrow": {
+      "id": "piercing_arrow",
+      "name": "Piercing Arrow",
+      "description": "Light damage and lowers the target's Defense.",
+      "type": "physical",
+      "effect": "damage_and_stat_modifier",
+      "target": "opponent",
+      "basePower": 8,
+      "statMultiplier": 0.65,
+      "statModifier": {
+        "stat": "defense",
+        "value": -3,
+        "durationTurns": 3
+      },
+      "hpCost": null,
+      "spriteKey": "piercing_arrow"
+    },
+    "aim": {
+      "id": "aim",
+      "name": "Aim",
+      "description": "Raises the user's Attack for three turns.",
+      "type": "status",
+      "effect": "stat_modifier",
+      "target": "self",
+      "basePower": 0,
+      "statMultiplier": 0,
+      "statModifier": {
+        "stat": "attack",
+        "value": 3,
+        "durationTurns": 3
+      },
+      "hpCost": null,
+      "spriteKey": "aim"
+    },
+    "evade": {
+      "id": "evade",
+      "name": "Evade",
+      "description": "Raises the user's Defense for three turns.",
+      "type": "status",
+      "effect": "stat_modifier",
+      "target": "self",
+      "basePower": 0,
+      "statMultiplier": 0,
+      "statModifier": {
+        "stat": "defense",
+        "value": 3,
+        "durationTurns": 3
+      },
+      "hpCost": null,
+      "spriteKey": "evade"
+    },
+    "heavy_chop": {
+      "id": "heavy_chop",
+      "name": "Heavy Chop",
+      "description": "Heavy physical damage.",
+      "type": "physical",
+      "effect": "damage",
+      "target": "opponent",
+      "basePower": 15,
+      "statMultiplier": 0.85,
+      "statModifier": null,
+      "hpCost": null,
+      "spriteKey": "heavy_chop"
+    },
+    "iron_stance": {
+      "id": "iron_stance",
+      "name": "Iron Stance",
+      "description": "Raises the user's Defense for three turns.",
+      "type": "status",
+      "effect": "stat_modifier",
+      "target": "self",
+      "basePower": 0,
+      "statMultiplier": 0,
+      "statModifier": {
+        "stat": "defense",
+        "value": 4,
+        "durationTurns": 3
+      },
+      "hpCost": null,
+      "spriteKey": "iron_stance"
+    },
+    "axe_breaker": {
+      "id": "axe_breaker",
+      "name": "Axe Breaker",
+      "description": "Light damage and lowers the target's Attack.",
+      "type": "physical",
+      "effect": "damage_and_stat_modifier",
+      "target": "opponent",
+      "basePower": 8,
+      "statMultiplier": 0.65,
+      "statModifier": {
+        "stat": "attack",
+        "value": -3,
+        "durationTurns": 3
+      },
+      "hpCost": null,
+      "spriteKey": "axe_breaker"
+    },
+    "holy_strike": {
+      "id": "holy_strike",
+      "name": "Holy Strike",
+      "description": "Reliable magic damage.",
+      "type": "magic",
+      "effect": "damage",
+      "target": "opponent",
+      "basePower": 10,
+      "statMultiplier": 0.75,
+      "statModifier": null,
+      "hpCost": null,
+      "spriteKey": "holy_strike"
+    },
+    "divine_guard": {
+      "id": "divine_guard",
+      "name": "Divine Guard",
+      "description": "Raises the user's Defense for three turns.",
+      "type": "status",
+      "effect": "stat_modifier",
+      "target": "self",
+      "basePower": 0,
+      "statMultiplier": 0,
+      "statModifier": {
+        "stat": "defense",
+        "value": 3,
+        "durationTurns": 3
+      },
+      "hpCost": null,
+      "spriteKey": "divine_guard"
+    },
+    "prayer": {
+      "id": "prayer",
+      "name": "Prayer",
+      "description": "Small heal that scales with Magic.",
+      "type": "magic",
+      "effect": "heal",
+      "target": "self",
+      "basePower": 11,
+      "statMultiplier": 0.55,
+      "statModifier": null,
+      "hpCost": null,
+      "spriteKey": "prayer"
+    },
+    "lance_thrust": {
+      "id": "lance_thrust",
+      "name": "Lance Thrust",
+      "description": "Reliable physical damage.",
+      "type": "physical",
+      "effect": "damage",
+      "target": "opponent",
+      "basePower": 11,
+      "statMultiplier": 0.75,
+      "statModifier": null,
+      "hpCost": null,
+      "spriteKey": "lance_thrust"
+    },
+    "armor_pierce": {
+      "id": "armor_pierce",
+      "name": "Armor Pierce",
+      "description": "Light damage and lowers the target's Defense.",
+      "type": "physical",
+      "effect": "damage_and_stat_modifier",
+      "target": "opponent",
+      "basePower": 8,
+      "statMultiplier": 0.65,
+      "statModifier": {
+        "stat": "defense",
+        "value": -3,
+        "durationTurns": 3
+      },
+      "hpCost": null,
+      "spriteKey": "armor_pierce"
+    },
+    "rally": {
+      "id": "rally",
+      "name": "Rally",
+      "description": "Raises the user's Attack for three turns.",
+      "type": "status",
+      "effect": "stat_modifier",
+      "target": "self",
+      "basePower": 0,
+      "statMultiplier": 0,
+      "statModifier": {
+        "stat": "attack",
+        "value": 3,
+        "durationTurns": 3
+      },
+      "hpCost": null,
+      "spriteKey": "rally"
+    },
+    "guard_break": {
+      "id": "guard_break",
+      "name": "Guard Break",
+      "description": "Light damage and lowers the target's Defense.",
+      "type": "physical",
+      "effect": "damage_and_stat_modifier",
+      "target": "opponent",
+      "basePower": 9,
+      "statMultiplier": 0.65,
+      "statModifier": {
+        "stat": "defense",
+        "value": -3,
+        "durationTurns": 3
+      },
+      "hpCost": null,
+      "spriteKey": "guard_break"
+    },
+    "power_strike": {
+      "id": "power_strike",
+      "name": "Power Strike",
+      "description": "Heavy physical damage.",
+      "type": "physical",
+      "effect": "damage",
+      "target": "opponent",
+      "basePower": 15,
+      "statMultiplier": 0.85,
+      "statModifier": null,
+      "hpCost": null,
+      "spriteKey": "power_strike"
+    },
+    "clean_cut": {
+      "id": "clean_cut",
+      "name": "Clean Cut",
+      "description": "Reliable physical damage.",
+      "type": "physical",
+      "effect": "damage",
+      "target": "opponent",
+      "basePower": 11,
+      "statMultiplier": 0.75,
+      "statModifier": null,
+      "hpCost": null,
+      "spriteKey": "clean_cut"
+    },
+    "blade_dance": {
+      "id": "blade_dance",
+      "name": "Blade Dance",
+      "description": "Raises the user's Attack for three turns.",
+      "type": "status",
+      "effect": "stat_modifier",
+      "target": "self",
+      "basePower": 0,
+      "statMultiplier": 0,
+      "statModifier": {
+        "stat": "attack",
+        "value": 3,
+        "durationTurns": 3
+      },
+      "hpCost": null,
+      "spriteKey": "blade_dance"
+    },
+    "light_heal": {
+      "id": "light_heal",
+      "name": "Light Heal",
+      "description": "Small heal that scales with Magic.",
+      "type": "magic",
+      "effect": "heal",
+      "target": "self",
+      "basePower": 10,
+      "statMultiplier": 0.55,
+      "statModifier": null,
+      "hpCost": null,
+      "spriteKey": "light_heal"
+    },
+    "bless": {
+      "id": "bless",
+      "name": "Bless",
+      "description": "Raises the user's Magic for three turns.",
+      "type": "status",
+      "effect": "stat_modifier",
+      "target": "self",
+      "basePower": 0,
+      "statMultiplier": 0,
+      "statModifier": {
+        "stat": "magic",
+        "value": 3,
+        "durationTurns": 3
+      },
+      "hpCost": null,
+      "spriteKey": "bless"
+    },
+    "smite": {
+      "id": "smite",
+      "name": "Smite",
+      "description": "Reliable magic damage.",
+      "type": "magic",
+      "effect": "damage",
+      "target": "opponent",
+      "basePower": 11,
+      "statMultiplier": 0.75,
+      "statModifier": null,
+      "hpCost": null,
+      "spriteKey": "smite"
+    },
+    "weaken": {
+      "id": "weaken",
+      "name": "Weaken",
+      "description": "Lowers the target's Attack for three turns.",
+      "type": "status",
+      "effect": "stat_modifier",
+      "target": "opponent",
+      "basePower": 0,
+      "statMultiplier": 0,
+      "statModifier": {
+        "stat": "attack",
+        "value": -3,
+        "durationTurns": 3
+      },
+      "hpCost": null,
+      "spriteKey": "weaken"
+    },
+    "rusty_blade": {
+      "id": "rusty_blade",
+      "name": "Rusty Blade",
+      "description": "Light physical damage.",
+      "type": "physical",
+      "effect": "damage",
+      "target": "opponent",
+      "basePower": 8,
+      "statMultiplier": 0.7,
+      "statModifier": null,
+      "hpCost": null,
+      "spriteKey": "rusty_blade"
+    },
+    "dirty_kick": {
+      "id": "dirty_kick",
+      "name": "Dirty Kick",
+      "description": "Light damage and lowers the target's Defense.",
+      "type": "physical",
+      "effect": "damage_and_stat_modifier",
+      "target": "opponent",
+      "basePower": 7,
+      "statMultiplier": 0.6,
+      "statModifier": {
+        "stat": "defense",
+        "value": -2,
+        "durationTurns": 3
+      },
+      "hpCost": null,
+      "spriteKey": "dirty_kick"
+    },
+    "frenzy": {
+      "id": "frenzy",
+      "name": "Frenzy",
+      "description": "Raises the user's Attack for three turns.",
+      "type": "status",
+      "effect": "stat_modifier",
+      "target": "self",
+      "basePower": 0,
+      "statMultiplier": 0,
+      "statModifier": {
+        "stat": "attack",
+        "value": 3,
+        "durationTurns": 3
+      },
+      "hpCost": null,
+      "spriteKey": "frenzy"
+    },
+    "headbutt": {
+      "id": "headbutt",
+      "name": "Headbutt",
+      "description": "Heavy physical damage.",
+      "type": "physical",
+      "effect": "damage",
+      "target": "opponent",
+      "basePower": 14,
+      "statMultiplier": 0.85,
+      "statModifier": null,
+      "hpCost": null,
+      "spriteKey": "headbutt"
+    },
+    "bite": {
+      "id": "bite",
+      "name": "Bite",
+      "description": "Reliable physical damage.",
+      "type": "physical",
+      "effect": "damage",
+      "target": "opponent",
+      "basePower": 10,
+      "statMultiplier": 0.75,
+      "statModifier": null,
+      "hpCost": null,
+      "spriteKey": "bite"
+    },
+    "web_throw": {
+      "id": "web_throw",
+      "name": "Web Throw",
+      "description": "Light damage and lowers the target's Defense.",
+      "type": "physical",
+      "effect": "damage_and_stat_modifier",
+      "target": "opponent",
+      "basePower": 7,
+      "statMultiplier": 0.6,
+      "statModifier": {
+        "stat": "defense",
+        "value": -3,
+        "durationTurns": 3
+      },
+      "hpCost": null,
+      "spriteKey": "web_throw"
+    },
+    "pounce": {
+      "id": "pounce",
+      "name": "Pounce",
+      "description": "Heavy physical damage.",
+      "type": "physical",
+      "effect": "damage",
+      "target": "opponent",
+      "basePower": 14,
+      "statMultiplier": 0.85,
+      "statModifier": null,
+      "hpCost": null,
+      "spriteKey": "pounce"
+    },
+    "skitter": {
+      "id": "skitter",
+      "name": "Skitter",
+      "description": "Raises the user's Defense for three turns.",
+      "type": "status",
+      "effect": "stat_modifier",
+      "target": "self",
+      "basePower": 0,
+      "statMultiplier": 0,
+      "statModifier": {
+        "stat": "defense",
+        "value": 3,
+        "durationTurns": 3
+      },
+      "hpCost": null,
+      "spriteKey": "skitter"
+    },
+    "firebolt": {
+      "id": "firebolt",
+      "name": "Firebolt",
+      "description": "Reliable magic damage.",
+      "type": "magic",
+      "effect": "damage",
+      "target": "opponent",
+      "basePower": 11,
+      "statMultiplier": 0.75,
+      "statModifier": null,
+      "hpCost": null,
+      "spriteKey": "firebolt"
+    },
+    "arcane_surge": {
+      "id": "arcane_surge",
+      "name": "Arcane Surge",
+      "description": "Raises the user's Magic for three turns.",
+      "type": "status",
+      "effect": "stat_modifier",
+      "target": "self",
+      "basePower": 0,
+      "statMultiplier": 0,
+      "statModifier": {
+        "stat": "magic",
+        "value": 3,
+        "durationTurns": 3
+      },
+      "hpCost": null,
+      "spriteKey": "arcane_surge"
+    },
+    "mana_drain": {
+      "id": "mana_drain",
+      "name": "Mana Drain",
+      "description": "Light magic damage and lowers the target's Magic.",
+      "type": "magic",
+      "effect": "damage_and_stat_modifier",
+      "target": "opponent",
+      "basePower": 8,
+      "statMultiplier": 0.65,
+      "statModifier": {
+        "stat": "magic",
+        "value": -3,
+        "durationTurns": 3
+      },
+      "hpCost": null,
+      "spriteKey": "mana_drain"
+    },
+    "hex_shield": {
+      "id": "hex_shield",
+      "name": "Hex Shield",
+      "description": "Raises the user's Defense for three turns.",
+      "type": "status",
+      "effect": "stat_modifier",
+      "target": "self",
+      "basePower": 0,
+      "statMultiplier": 0,
+      "statModifier": {
+        "stat": "defense",
+        "value": 3,
+        "durationTurns": 3
+      },
+      "hpCost": null,
+      "spriteKey": "hex_shield"
+    },
+    "shadow_bolt": {
+      "id": "shadow_bolt",
+      "name": "Shadow Bolt",
+      "description": "Heavy magic damage.",
+      "type": "magic",
+      "effect": "damage",
+      "target": "opponent",
+      "basePower": 16,
+      "statMultiplier": 0.85,
+      "statModifier": null,
+      "hpCost": null,
+      "spriteKey": "shadow_bolt"
+    },
+    "drain_life": {
+      "id": "drain_life",
+      "name": "Drain Life",
+      "description": "Deals magic damage and heals for the same amount.",
+      "type": "magic",
+      "effect": "drain",
+      "target": "opponent",
+      "basePower": 7,
+      "statMultiplier": 0.55,
+      "statModifier": null,
+      "hpCost": null,
+      "spriteKey": "drain_life"
+    },
+    "curse": {
+      "id": "curse",
+      "name": "Curse",
+      "description": "Lowers the target's Attack for three turns.",
+      "type": "status",
+      "effect": "stat_modifier",
+      "target": "opponent",
+      "basePower": 0,
+      "statMultiplier": 0,
+      "statModifier": {
+        "stat": "attack",
+        "value": -3,
+        "durationTurns": 3
+      },
+      "hpCost": null,
+      "spriteKey": "curse"
+    },
+    "dark_pact": {
+      "id": "dark_pact",
+      "name": "Dark Pact",
+      "description": "Raises Magic at the cost of HP.",
+      "type": "status",
+      "effect": "stat_modifier",
+      "target": "self",
+      "basePower": 0,
+      "statMultiplier": 0,
+      "statModifier": {
+        "stat": "magic",
+        "value": 5,
+        "durationTurns": 3
+      },
+      "hpCost": 10,
+      "spriteKey": "dark_pact"
+    },
+    "flame_breath": {
+      "id": "flame_breath",
+      "name": "Flame Breath",
+      "description": "Very heavy magic damage.",
+      "type": "magic",
+      "effect": "damage",
+      "target": "opponent",
+      "basePower": 21,
+      "statMultiplier": 0.95,
+      "statModifier": null,
+      "hpCost": null,
+      "spriteKey": "flame_breath"
+    },
+    "claw_swipe": {
+      "id": "claw_swipe",
+      "name": "Claw Swipe",
+      "description": "Reliable physical damage.",
+      "type": "physical",
+      "effect": "damage",
+      "target": "opponent",
+      "basePower": 13,
+      "statMultiplier": 0.8,
+      "statModifier": null,
+      "hpCost": null,
+      "spriteKey": "claw_swipe"
+    },
+    "intimidate": {
+      "id": "intimidate",
+      "name": "Intimidate",
+      "description": "Lowers the target's Attack for three turns.",
+      "type": "status",
+      "effect": "stat_modifier",
+      "target": "opponent",
+      "basePower": 0,
+      "statMultiplier": 0,
+      "statModifier": {
+        "stat": "attack",
+        "value": -4,
+        "durationTurns": 3
+      },
+      "hpCost": null,
+      "spriteKey": "intimidate"
+    },
+    "dragon_scales": {
+      "id": "dragon_scales",
+      "name": "Dragon Scales",
+      "description": "Raises the user's Defense for three turns.",
+      "type": "status",
+      "effect": "stat_modifier",
+      "target": "self",
+      "basePower": 0,
+      "statMultiplier": 0,
+      "statModifier": {
+        "stat": "defense",
+        "value": 5,
+        "durationTurns": 3
+      },
+      "hpCost": null,
+      "spriteKey": "dragon_scales"
+    }
+  },
+  "itemRegistry": {
+    "leather_helmet": {
+      "id": "leather_helmet",
+      "name": "Leather Helmet",
+      "description": "Raises the user's Defense while equipped.",
+      "target": "self",
+      "statModifier": {
+        "stat": "defense",
+        "value": 2
+      },
+      "spriteKey": "leather_helmet"
+    },
+    "iron_helmet": {
+      "id": "iron_helmet",
+      "name": "Iron Helmet",
+      "description": "Raises the user's Defense while equipped.",
+      "target": "self",
+      "statModifier": {
+        "stat": "defense",
+        "value": 3
+      },
+      "spriteKey": "iron_helmet"
+    },
+    "chain_armor": {
+      "id": "chain_armor",
+      "name": "Chain Armor",
+      "description": "Raises the user's max Health while equipped.",
+      "target": "self",
+      "statModifier": {
+        "stat": "health",
+        "value": 15
+      },
+      "spriteKey": "chain_armor"
+    },
+    "plate_armor": {
+      "id": "plate_armor",
+      "name": "Plate Armor",
+      "description": "Greatly raises the user's max Health while equipped.",
+      "target": "self",
+      "statModifier": {
+        "stat": "health",
+        "value": 25
+      },
+      "spriteKey": "plate_armor"
+    },
+    "iron_blade": {
+      "id": "iron_blade",
+      "name": "Iron Blade",
+      "description": "Raises the user's Attack while equipped.",
+      "target": "self",
+      "statModifier": {
+        "stat": "attack",
+        "value": 3
+      },
+      "spriteKey": "iron_blade"
+    },
+    "steel_sword": {
+      "id": "steel_sword",
+      "name": "Steel Sword",
+      "description": "Raises the user's Attack while equipped.",
+      "target": "self",
+      "statModifier": {
+        "stat": "attack",
+        "value": 5
+      },
+      "spriteKey": "steel_sword"
+    },
+    "hunter_bow": {
+      "id": "hunter_bow",
+      "name": "Hunter Bow",
+      "description": "Raises the user's Attack while equipped.",
+      "target": "self",
+      "statModifier": {
+        "stat": "attack",
+        "value": 3
+      },
+      "spriteKey": "hunter_bow"
+    },
+    "priest_charm": {
+      "id": "priest_charm",
+      "name": "Priest Charm",
+      "description": "Raises the user's Magic while equipped.",
+      "target": "self",
+      "statModifier": {
+        "stat": "magic",
+        "value": 3
+      },
+      "spriteKey": "priest_charm"
+    },
+    "mana_relic": {
+      "id": "mana_relic",
+      "name": "Mana Relic",
+      "description": "Raises the user's Magic while equipped.",
+      "target": "self",
+      "statModifier": {
+        "stat": "magic",
+        "value": 5
+      },
+      "spriteKey": "mana_relic"
+    },
+    "tower_bulwark": {
+      "id": "tower_bulwark",
+      "name": "Tower Bulwark",
+      "description": "Raises the user's Defense while equipped.",
+      "target": "self",
+      "statModifier": {
+        "stat": "defense",
+        "value": 4
+      },
+      "spriteKey": "tower_bulwark"
+    },
+    "field_tonic": {
+      "id": "field_tonic",
+      "name": "Field Tonic",
+      "description": "Raises the user's max Health while equipped.",
+      "target": "self",
+      "statModifier": {
+        "stat": "health",
+        "value": 12
+      },
+      "spriteKey": "field_tonic"
+    },
+    "war_drum": {
+      "id": "war_drum",
+      "name": "War Drum",
+      "description": "Raises the user's Attack while equipped.",
+      "target": "self",
+      "statModifier": {
+        "stat": "attack",
+        "value": 4
+      },
+      "spriteKey": "war_drum"
+    },
+    "cracked_totem": {
+      "id": "cracked_totem",
+      "name": "Cracked Totem",
+      "description": "Lowers the target's Defense while equipped.",
+      "target": "opponent",
+      "statModifier": {
+        "stat": "defense",
+        "value": -2
+      },
+      "spriteKey": "cracked_totem"
+    },
+    "witch_lantern": {
+      "id": "witch_lantern",
+      "name": "Witch Lantern",
+      "description": "Lowers the target's Magic while equipped.",
+      "target": "opponent",
+      "statModifier": {
+        "stat": "magic",
+        "value": -3
+      },
+      "spriteKey": "witch_lantern"
+    },
+    "dragon_scale_relic": {
+      "id": "dragon_scale_relic",
+      "name": "Dragon Scale Relic",
+      "description": "Greatly raises the user's Defense while equipped.",
+      "target": "self",
+      "statModifier": {
+        "stat": "defense",
+        "value": 6
+      },
+      "spriteKey": "dragon_scale_relic"
+    }
+  },
+  "environmentRegistry": {
+    "forest": {
+      "id": "forest",
+      "name": "Forest",
+      "description": "A quiet stretch of wild land with no special effect on either side.",
+      "heroEffects": {
+        "statModifiers": {},
+        "turnEffect": null
+      },
+      "monsterEffects": {
+        "statModifiers": {},
+        "turnEffect": null
+      },
+      "spriteKey": "forest"
+    },
+    "spider": {
+      "id": "spider",
+      "name": "Spider Nest",
+      "description": "Sticky webs slightly lower the hero's Defense.",
+      "heroEffects": {
+        "statModifiers": {
+          "defense": -1
+        },
+        "turnEffect": null
+      },
+      "monsterEffects": {
+        "statModifiers": {},
+        "turnEffect": null
+      },
+      "spriteKey": "spider"
+    },
+    "lava": {
+      "id": "lava",
+      "name": "Lava Chamber",
+      "description": "Scorching ground burns the hero at the end of each turn.",
+      "heroEffects": {
+        "statModifiers": {},
+        "turnEffect": {
+          "type": "damage",
+          "value": 3
+        }
+      },
+      "monsterEffects": {
+        "statModifiers": {},
+        "turnEffect": null
+      },
+      "spriteKey": "lava"
+    },
+    "magic": {
+      "id": "magic",
+      "name": "Magic Hall",
+      "description": "Loose mana empowers spells for both combatants.",
+      "heroEffects": {
+        "statModifiers": {
+          "magic": 3
+        },
+        "turnEffect": null
+      },
+      "monsterEffects": {
+        "statModifiers": {
+          "magic": 3
+        },
+        "turnEffect": null
+      },
+      "spriteKey": "magic"
+    },
+    "dragon": {
+      "id": "dragon",
+      "name": "Dragon Throne",
+      "description": "Oppressive draconic pressure slowly lowers the hero's Attack.",
+      "heroEffects": {
+        "statModifiers": {},
+        "turnEffect": {
+          "type": "stat_modifier",
+          "stat": "attack",
+          "value": -1
+        }
+      },
+      "monsterEffects": {
+        "statModifiers": {},
+        "turnEffect": null
+      },
+      "spriteKey": "dragon"
+    }
+  },
+  "heroes": [
+    {
+      "id": "knight",
+      "name": "Knight",
+      "description": "A balanced frontline fighter with defense and self-sustain.",
+      "spriteKey": "knight",
+      "baseStats": {
+        "health": 100,
+        "attack": 12,
+        "defense": 10,
+        "magic": 9
+      },
+      "statsPerLevel": {
+        "health": 7,
+        "attack": 1,
+        "defense": 1,
+        "magic": 1
+      },
+      "moves": [
+        "slash",
+        "shield_up",
+        "battle_cry",
+        "second_wind"
+      ],
+      "equippedItems": [],
+      "inventoryItems": [
+        "leather_helmet"
+      ]
+    },
+    {
+      "id": "archer",
+      "name": "Archer",
+      "description": "A precise fighter with good damage, but weaker Defense.",
+      "spriteKey": "archer",
+      "baseStats": {
+        "health": 98,
+        "attack": 14,
+        "defense": 7,
+        "magic": 8
+      },
+      "statsPerLevel": {
+        "health": 6,
+        "attack": 2,
+        "defense": 1,
+        "magic": 1
+      },
+      "moves": [
+        "quick_shot",
+        "piercing_arrow",
+        "aim",
+        "basic_heal"
+      ],
+      "equippedItems": [],
+      "inventoryItems": [
+        "hunter_bow"
+      ]
+    },
+    {
+      "id": "armored_axeman",
+      "name": "Armored Axeman",
+      "description": "A sturdy fighter with strong Defense and slower damage scaling.",
+      "spriteKey": "armored_axeman",
+      "baseStats": {
+        "health": 105,
+        "attack": 13,
+        "defense": 12,
+        "magic": 5
+      },
+      "statsPerLevel": {
+        "health": 8,
+        "attack": 1,
+        "defense": 2,
+        "magic": 1
+      },
+      "moves": [
+        "heavy_chop",
+        "iron_stance",
+        "axe_breaker",
+        "second_wind"
+      ],
+      "equippedItems": [],
+      "inventoryItems": [
+        "iron_helmet"
+      ]
+    },
+    {
+      "id": "knight_templar",
+      "name": "Knight Templar",
+      "description": "A defensive holy fighter with healing and magic utility.",
+      "spriteKey": "knight_templar",
+      "baseStats": {
+        "health": 102,
+        "attack": 10,
+        "defense": 11,
+        "magic": 13
+      },
+      "statsPerLevel": {
+        "health": 7,
+        "attack": 1,
+        "defense": 1,
+        "magic": 2
+      },
+      "moves": [
+        "holy_strike",
+        "divine_guard",
+        "prayer",
+        "shield_up"
+      ],
+      "equippedItems": [],
+      "inventoryItems": [
+        "priest_charm"
+      ]
+    },
+    {
+      "id": "lancer",
+      "name": "Lancer",
+      "description": "A focused fighter that breaks armor before dealing damage.",
+      "spriteKey": "lancer",
+      "baseStats": {
+        "health": 100,
+        "attack": 13,
+        "defense": 9,
+        "magic": 8
+      },
+      "statsPerLevel": {
+        "health": 7,
+        "attack": 2,
+        "defense": 1,
+        "magic": 1
+      },
+      "moves": [
+        "lance_thrust",
+        "armor_pierce",
+        "rally",
+        "basic_heal"
+      ],
+      "equippedItems": [],
+      "inventoryItems": [
+        "iron_blade"
+      ]
+    },
+    {
+      "id": "soldier",
+      "name": "Soldier",
+      "description": "A simple and reliable fighter with no major weakness.",
+      "spriteKey": "soldier",
+      "baseStats": {
+        "health": 100,
+        "attack": 12,
+        "defense": 10,
+        "magic": 8
+      },
+      "statsPerLevel": {
+        "health": 7,
+        "attack": 1,
+        "defense": 1,
+        "magic": 1
+      },
+      "moves": [
+        "slash",
+        "shield_up",
+        "power_strike",
+        "basic_heal"
+      ],
+      "equippedItems": [],
+      "inventoryItems": [
+        "leather_helmet"
+      ]
+    },
+    {
+      "id": "swordsman",
+      "name": "Swordsman",
+      "description": "A physical attacker with good damage and lower Defense.",
+      "spriteKey": "swordsman",
+      "baseStats": {
+        "health": 98,
+        "attack": 14,
+        "defense": 8,
+        "magic": 7
+      },
+      "statsPerLevel": {
+        "health": 6,
+        "attack": 2,
+        "defense": 1,
+        "magic": 1
+      },
+      "moves": [
+        "clean_cut",
+        "blade_dance",
+        "power_strike",
+        "basic_heal"
+      ],
+      "equippedItems": [],
+      "inventoryItems": [
+        "iron_blade"
+      ]
+    },
+    {
+      "id": "priest",
+      "name": "Priest",
+      "description": "A magic support class with healing, buffs and holy damage.",
+      "spriteKey": "priest",
+      "baseStats": {
+        "health": 100,
+        "attack": 8,
+        "defense": 8,
+        "magic": 15
+      },
+      "statsPerLevel": {
+        "health": 7,
+        "attack": 1,
+        "defense": 1,
+        "magic": 2
+      },
+      "moves": [
+        "smite",
+        "light_heal",
+        "bless",
+        "weaken"
+      ],
+      "equippedItems": [],
+      "inventoryItems": [
+        "priest_charm"
+      ]
+    }
+  ],
+  "encounters": [
+    {
+      "id": "goblin_warrior",
+      "name": "Goblin Warrior",
+      "description": "A weak but annoying fighter who uses cheap tricks.",
+      "environmentId": "forest",
+      "stats": {
+        "health": 100,
+        "attack": 10,
+        "defense": 6,
+        "magic": 3
+      },
+      "moves": [
+        "rusty_blade",
+        "dirty_kick",
+        "headbutt",
+        "goblin_patch"
+      ],
+      "equippedItems": [],
+      "inventoryItems": [
+        "leather_helmet"
+      ],
+      "learnableMoves": [
+        "rusty_blade",
+        "dirty_kick",
+        "headbutt",
+        "goblin_patch"
+      ],
+      "xpReward": 80,
+      "coinReward": 40,
+      "spriteKey": "orc"
+    },
+    {
+      "id": "giant_spider",
+      "name": "Giant Spider",
+      "description": "A patient hunter that weakens armor before going for the kill.",
+      "environmentId": "spider",
+      "stats": {
+        "health": 120,
+        "attack": 12,
+        "defense": 8,
+        "magic": 4
+      },
+      "moves": [
+        "bite",
+        "web_throw",
+        "pounce",
+        "cocoon_rest"
+      ],
+      "equippedItems": [],
+      "inventoryItems": [
+        "field_tonic"
+      ],
+      "learnableMoves": [
+        "bite",
+        "web_throw",
+        "pounce",
+        "cocoon_rest"
+      ],
+      "xpReward": 115,
+      "coinReward": 60,
+      "spriteKey": "orc_rider"
+    },
+    {
+      "id": "goblin_mage",
+      "name": "Goblin Mage",
+      "description": "A dangerous caster that becomes stronger if ignored.",
+      "environmentId": "lava",
+      "stats": {
+        "health": 165,
+        "attack": 7,
+        "defense": 7,
+        "magic": 14
+      },
+      "moves": [
+        "firebolt",
+        "arcane_surge",
+        "mana_drain",
+        "dark_mend"
+      ],
+      "equippedItems": [],
+      "inventoryItems": [
+        "priest_charm"
+      ],
+      "learnableMoves": [
+        "firebolt",
+        "arcane_surge",
+        "mana_drain",
+        "dark_mend"
+      ],
+      "xpReward": 150,
+      "coinReward": 80,
+      "spriteKey": "armored_orc"
+    },
+    {
+      "id": "witch",
+      "name": "Witch",
+      "description": "A cursed magic user who survives through drain and curses.",
+      "environmentId": "magic",
+      "stats": {
+        "health": 195,
+        "attack": 8,
+        "defense": 9,
+        "magic": 17
+      },
+      "moves": [
+        "shadow_bolt",
+        "drain_life",
+        "curse",
+        "witch_brew"
+      ],
+      "equippedItems": [],
+      "inventoryItems": [
+        "witch_lantern"
+      ],
+      "learnableMoves": [
+        "shadow_bolt",
+        "drain_life",
+        "curse",
+        "witch_brew"
+      ],
+      "xpReward": 195,
+      "coinReward": 110,
+      "spriteKey": "wizard"
+    },
+    {
+      "id": "dragon",
+      "name": "Dragon",
+      "description": "The final guardian of the tower. It may take several runs to defeat.",
+      "environmentId": "dragon",
+      "stats": {
+        "health": 285,
+        "attack": 16,
+        "defense": 13,
+        "magic": 18
+      },
+      "moves": [
+        "flame_breath",
+        "claw_swipe",
+        "intimidate",
+        "dragon_regen"
+      ],
+      "equippedItems": [],
+      "inventoryItems": [
+        "dragon_scale_relic",
+        "plate_armor"
+      ],
+      "learnableMoves": [
+        "flame_breath",
+        "claw_swipe",
+        "intimidate",
+        "dragon_regen"
+      ],
+      "xpReward": 300,
+      "coinReward": 185,
+      "spriteKey": "werebear"
+    }
+  ],
+  "shopItems": [
+    {
+      "id": "health_tonic",
+      "name": "Health Tonic",
+      "description": "Permanently increases max Health.",
+      "spriteKey": "health",
+      "cost": 85,
+      "repeatable": true,
+      "type": "stat",
+      "stat": "health",
+      "value": 10
+    },
+    {
+      "id": "attack_training",
+      "name": "Attack Training",
+      "description": "Permanently increases Attack.",
+      "spriteKey": "attack",
+      "cost": 95,
+      "repeatable": true,
+      "type": "stat",
+      "stat": "attack",
+      "value": 1
+    },
+    {
+      "id": "defense_training",
+      "name": "Defense Training",
+      "description": "Permanently increases Defense.",
+      "spriteKey": "defense",
+      "cost": 95,
+      "repeatable": true,
+      "type": "stat",
+      "stat": "defense",
+      "value": 1
+    },
+    {
+      "id": "magic_training",
+      "name": "Magic Training",
+      "description": "Permanently increases Magic.",
+      "spriteKey": "magic",
+      "cost": 95,
+      "repeatable": true,
+      "type": "stat",
+      "stat": "magic",
+      "value": 1
+    },
+    {
+      "id": "buy_power_strike",
+      "name": "Power Strike Manual",
+      "description": "Unlocks Power Strike for the hero.",
+      "spriteKey": "power_strike",
+      "cost": 125,
+      "repeatable": false,
+      "type": "move",
+      "moveId": "power_strike"
+    },
+    {
+      "id": "buy_firebolt",
+      "name": "Firebolt Tome",
+      "description": "Unlocks Firebolt for the hero.",
+      "spriteKey": "firebolt",
+      "cost": 130,
+      "repeatable": false,
+      "type": "move",
+      "moveId": "firebolt"
+    },
+    {
+      "id": "buy_hex_shield",
+      "name": "Hex Shield Sigil",
+      "description": "Unlocks Hex Shield for the hero.",
+      "spriteKey": "hex_shield",
+      "cost": 145,
+      "repeatable": false,
+      "type": "move",
+      "moveId": "hex_shield"
+    },
+    {
+      "id": "buy_drain_life",
+      "name": "Drain Life Grimoire",
+      "description": "Unlocks Drain Life for the hero.",
+      "spriteKey": "drain_life",
+      "cost": 160,
+      "repeatable": false,
+      "type": "move",
+      "moveId": "drain_life"
+    },
+    {
+      "id": "buy_shadow_bolt",
+      "name": "Shadow Bolt Tome",
+      "description": "Unlocks Shadow Bolt for the hero.",
+      "spriteKey": "shadow_bolt",
+      "cost": 180,
+      "repeatable": false,
+      "type": "move",
+      "moveId": "shadow_bolt"
+    },
+    {
+      "id": "buy_iron_helmet",
+      "name": "Iron Helmet",
+      "description": "Adds an Iron Helmet to the hero's inventory.",
+      "spriteKey": "iron_helmet",
+      "cost": 80,
+      "repeatable": false,
+      "type": "item",
+      "itemId": "iron_helmet"
+    },
+    {
+      "id": "buy_chain_armor",
+      "name": "Chain Armor",
+      "description": "Adds Chain Armor to the hero's inventory.",
+      "spriteKey": "chain_armor",
+      "cost": 100,
+      "repeatable": false,
+      "type": "item",
+      "itemId": "chain_armor"
+    },
+    {
+      "id": "buy_iron_blade",
+      "name": "Iron Blade",
+      "description": "Adds Iron Blade to the hero's inventory.",
+      "spriteKey": "iron_blade",
+      "cost": 105,
+      "repeatable": false,
+      "type": "item",
+      "itemId": "iron_blade"
+    },
+    {
+      "id": "buy_steel_sword",
+      "name": "Steel Sword",
+      "description": "Adds Steel Sword to the hero's inventory.",
+      "spriteKey": "steel_sword",
+      "cost": 150,
+      "repeatable": false,
+      "type": "item",
+      "itemId": "steel_sword"
+    },
+    {
+      "id": "buy_mana_relic",
+      "name": "Mana Relic",
+      "description": "Adds Mana Relic to the hero's inventory.",
+      "spriteKey": "mana_relic",
+      "cost": 150,
+      "repeatable": false,
+      "type": "item",
+      "itemId": "mana_relic"
+    },
+    {
+      "id": "buy_plate_armor",
+      "name": "Plate Armor",
+      "description": "Adds Plate Armor to the hero's inventory.",
+      "spriteKey": "plate_armor",
+      "cost": 170,
+      "repeatable": false,
+      "type": "item",
+      "itemId": "plate_armor"
+    }
+  ]
+}
