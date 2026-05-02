@@ -60,12 +60,16 @@ export type Item = {
 
 export type ItemRegistry = Record<string, Item>;
 
-export type EnvironmentTurnEffectType = "damage" | "heal";
-
-export type EnvironmentTurnEffect = {
-  type: EnvironmentTurnEffectType;
-  value: number;
-};
+export type EnvironmentTurnEffect =
+  | {
+      type: "damage" | "heal";
+      value: number;
+    }
+  | {
+      type: "stat_modifier";
+      stat: StatKey;
+      value: number;
+    };
 
 export type EnvironmentSideEffects = {
   statModifiers: Partial<Record<UpgradeableStatKey, number>>;

@@ -37,7 +37,7 @@ No params, no body.
       "id": "goblin_warrior",
       "name": "Goblin Warrior",
       "description": "A scrappy fighter who wins through cheap shots and reckless aggression.",
-      "environmentId": "ruined_keep",
+      "environmentId": "forest",
       "stats": {
         "health": 70,
         "attack": 15,
@@ -199,21 +199,17 @@ No params, no body.
     }
   },
   "environmentRegistry": {
-    "ruined_keep": {
-      "id": "ruined_keep",
-      "name": "Ruined Keep",
-      "description": "Broken walls and old war banners harden both fighters for a longer brawl.",
-      "spriteKey": "bg_ruined_keep",
+    "forest": {
+      "id": "forest",
+      "name": "Forest",
+      "description": "A quiet stretch of wild land with no special effect on either side.",
+      "spriteKey": "forest",
       "heroEffects": {
-        "statModifiers": {
-          "defense": 2
-        },
+        "statModifiers": {},
         "turnEffect": null
       },
       "monsterEffects": {
-        "statModifiers": {
-          "defense": 3
-        },
+        "statModifiers": {},
         "turnEffect": null
       }
     }
@@ -278,7 +274,7 @@ Content-Type: application/json
     "id": "goblin_warrior_endless_2",
     "name": "Goblin Warrior +1",
     "description": "A scrappy fighter who wins through cheap shots and reckless aggression. Empowered by endless ascent.",
-    "environmentId": "ruined_keep",
+    "environmentId": "forest",
     "stats": {
       "health": 84,
       "attack": 17,
@@ -490,11 +486,17 @@ type Environment = {
   spriteKey: string;
   heroEffects: {
     statModifiers: Partial<Record<"health" | "attack" | "defense" | "magic", number>>;
-    turnEffect: { type: "damage" | "heal"; value: number } | null;
+    turnEffect:
+      | { type: "damage" | "heal"; value: number }
+      | { type: "stat_modifier"; stat: "attack" | "defense" | "magic"; value: number }
+      | null;
   };
   monsterEffects: {
     statModifiers: Partial<Record<"health" | "attack" | "defense" | "magic", number>>;
-    turnEffect: { type: "damage" | "heal"; value: number } | null;
+    turnEffect:
+      | { type: "damage" | "heal"; value: number }
+      | { type: "stat_modifier"; stat: "attack" | "defense" | "magic"; value: number }
+      | null;
   };
 };
 ```
@@ -503,6 +505,7 @@ type Environment = {
 - environment stat modifiers last for the whole battle
 - `turnEffect.type === "damage"` subtracts HP each turn
 - `turnEffect.type === "heal"` restores HP each turn up to max HP
+- `turnEffect.type === "stat_modifier"` applies that stat delta once per turn to the affected side
 
 ### `CoinRewardScaling`
 

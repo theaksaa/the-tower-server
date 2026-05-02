@@ -267,11 +267,17 @@ type Environment = {
   spriteKey: string;
   heroEffects: {
     statModifiers: Partial<Record<"health" | "attack" | "defense" | "magic", number>>;
-    turnEffect: { type: "damage" | "heal"; value: number } | null;
+    turnEffect:
+      | { type: "damage" | "heal"; value: number }
+      | { type: "stat_modifier"; stat: "attack" | "defense" | "magic"; value: number }
+      | null;
   };
   monsterEffects: {
     statModifiers: Partial<Record<"health" | "attack" | "defense" | "magic", number>>;
-    turnEffect: { type: "damage" | "heal"; value: number } | null;
+    turnEffect:
+      | { type: "damage" | "heal"; value: number }
+      | { type: "stat_modifier"; stat: "attack" | "defense" | "magic"; value: number }
+      | null;
   };
 };
 ```
@@ -360,7 +366,7 @@ Applies to both heroes and monsters.
   "id": "goblin_warrior",
   "name": "Goblin Warrior",
   "description": "A scrappy fighter who wins through cheap shots and reckless aggression.",
-  "environmentId": "ruined_keep",
+  "environmentId": "forest",
   "stats": { "health": 70, "attack": 15, "defense": 7, "magic": 4 },
   "moves": ["rusty_blade", "dirty_kick", "frenzy", "headbutt"],
   "equippedItems": ["cracked_totem"],
