@@ -101,7 +101,7 @@ function createScaledEncounter(baseMonster: Monster, loopIndex: number): Monster
   return {
     ...baseMonster,
     id: `${baseMonster.id}_endless_${loopIndex + 1}`,
-    name: loopIndex === 0 ? baseMonster.name : `${baseMonster.name} +${loopIndex}`,
+    name: baseMonster.name,
     description:
       loopIndex === 0
         ? baseMonster.description
@@ -306,6 +306,31 @@ function pickWeightedMove(scoredMoves: readonly ScoredMove[]) {
   return scoredMoves[scoredMoves.length - 1]?.move ?? getRandomItem(scoredMoves).move;
 }
 
+function createSeededRandom(seed: number) {
+  let value = seed >>> 0;
+
+  return () => {
+    value = (value * 1664525 + 1013904223) >>> 0;
+    return value / 0x100000000;
+  };
+}
+
+function getLoopEncounterOrder(loopIndex: number): Monster[] {
+  if (loopIndex === 0) {
+    return encounters;
+  }
+
+  const shuffled = [...encounters];
+  const random = createSeededRandom((loopIndex + 1) * 2654435761);
+
+  for (let index = shuffled.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(random() * (index + 1));
+    [shuffled[index], shuffled[swapIndex]] = [shuffled[swapIndex]!, shuffled[index]!];
+  }
+
+  return shuffled;
+}
+
 export function createGameEngine(): GameEngine {
   return {
     createRunConfig() {
@@ -325,9 +350,10 @@ export function createGameEngine(): GameEngine {
     },
     createNextEncounter(encountersCleared) {
       const encounterNumber = encountersCleared + 1;
-      const encounterIndex = encountersCleared % encounters.length;
       const loopIndex = Math.floor(encountersCleared / endlessMode.encountersPerLoop);
-      const baseMonster = encounters[encounterIndex];
+      const encounterIndexInLoop = encountersCleared % endlessMode.encountersPerLoop;
+      const loopEncounters = getLoopEncounterOrder(loopIndex);
+      const baseMonster = loopEncounters[encounterIndexInLoop % loopEncounters.length];
 
       if (!baseMonster) {
         throw new Error("encounter_not_found");

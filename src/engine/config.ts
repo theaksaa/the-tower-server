@@ -87,19 +87,19 @@ export const levelProgression: LevelProgression = {
 export const endlessMode: EndlessModeConfig = {
   enabled: true,
   encountersPerLoop: 5,
-  healthMultiplierPerLoop: 1.16,
-  statMultiplierPerLoop: 1.08,
-  rewardMultiplierPerLoop: 1.1
+  healthMultiplierPerLoop: 1.22,
+  statMultiplierPerLoop: 1.11,
+  rewardMultiplierPerLoop: 1.3
 };
 
 export const xpRewardScaling: XpRewardScaling = {
-  multiplierPerKill: 0.92,
-  minimumReward: 30
+  multiplierPerKill: 0.97,
+  minimumReward: 45
 };
 
 export const coinRewardScaling: CoinRewardScaling = {
-  multiplierPerKill: 0.85,
-  minimumReward: 10
+  multiplierPerKill: 0.93,
+  minimumReward: 18
 };
 
 export const moveRegistry: MoveRegistry = createMoveRegistry({
