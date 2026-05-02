@@ -781,6 +781,40 @@
       },
       "hpCost": null,
       "spriteKey": "dragon_scales"
+    },
+    "poison": {
+      "id": "poison",
+      "name": "Poison",
+      "description": "Poisons the target, causing health loss for three turns.",
+      "type": "status",
+      "effect": "stat_modifier",
+      "target": "opponent",
+      "basePower": 0,
+      "statMultiplier": 0,
+      "statModifier": {
+        "stat": "health",
+        "value": -5,
+        "durationTurns": 3
+      },
+      "hpCost": null,
+      "spriteKey": "poison"
+    },
+    "bleed": {
+      "id": "bleed",
+      "name": "Bleed",
+      "description": "Opens a wound that causes health loss for three turns.",
+      "type": "status",
+      "effect": "stat_modifier",
+      "target": "opponent",
+      "basePower": 0,
+      "statMultiplier": 0,
+      "statModifier": {
+        "stat": "health",
+        "value": -6,
+        "durationTurns": 3
+      },
+      "hpCost": null,
+      "spriteKey": "bleed"
     }
   },
   "itemRegistry": {
@@ -1276,7 +1310,7 @@
       "moves": [
         "rusty_blade",
         "dirty_kick",
-        "headbutt",
+        "bleed",
         "goblin_patch"
       ],
       "equippedItems": [],
@@ -1286,7 +1320,7 @@
       "learnableMoves": [
         "rusty_blade",
         "dirty_kick",
-        "headbutt",
+        "bleed",
         "goblin_patch"
       ],
       "xpReward": 80,
@@ -1306,7 +1340,7 @@
       },
       "moves": [
         "bite",
-        "web_throw",
+        "poison",
         "pounce",
         "cocoon_rest"
       ],
@@ -1316,7 +1350,7 @@
       ],
       "learnableMoves": [
         "bite",
-        "web_throw",
+        "poison",
         "pounce",
         "cocoon_rest"
       ],
@@ -1369,7 +1403,7 @@
       "moves": [
         "shadow_bolt",
         "drain_life",
-        "curse",
+        "poison",
         "witch_brew"
       ],
       "equippedItems": [],
@@ -1379,7 +1413,7 @@
       "learnableMoves": [
         "shadow_bolt",
         "drain_life",
-        "curse",
+        "poison",
         "witch_brew"
       ],
       "xpReward": 195,
@@ -1400,7 +1434,7 @@
       "moves": [
         "flame_breath",
         "claw_swipe",
-        "intimidate",
+        "bleed",
         "dragon_regen"
       ],
       "equippedItems": [],
@@ -1411,7 +1445,7 @@
       "learnableMoves": [
         "flame_breath",
         "claw_swipe",
-        "intimidate",
+        "bleed",
         "dragon_regen"
       ],
       "xpReward": 300,

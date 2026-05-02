@@ -221,6 +221,10 @@ function scoreMonsterMove(
       const modifierMagnitude = Math.abs(modifier.value) * modifier.durationTurns;
 
       if (move.target === "self" && modifier.value > 0) {
+        if (modifier.stat === "health") {
+          score += modifierMagnitude * (hpRatio <= 0.45 ? 2.4 : 1.1);
+        }
+
         if (modifier.stat === "defense") {
           score += modifierMagnitude * (hpRatio <= 0.55 ? 2.2 : 1.2);
           score += heroPressure * 0.5;
@@ -244,6 +248,11 @@ function scoreMonsterMove(
       }
 
       if (move.target === "opponent" && modifier.value < 0) {
+        if (modifier.stat === "health") {
+          score += modifierMagnitude * (state.turnNumber <= 3 ? 2.2 : 1.2);
+          score += heroCurrentHp > 0 ? modifierMagnitude / heroCurrentHp : 0;
+        }
+
         if (modifier.stat === "defense") {
           score += modifierMagnitude * 1.6;
           score += strongestDamageValue * 0.25;

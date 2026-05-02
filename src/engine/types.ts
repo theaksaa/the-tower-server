@@ -10,7 +10,7 @@ export type Stats = {
 };
 
 export type StatModifier = {
-  stat: StatKey;
+  stat: UpgradeableStatKey;
   value: number;
   durationTurns: number;
 };
