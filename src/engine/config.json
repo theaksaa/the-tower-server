@@ -1313,7 +1313,9 @@
         "bleed",
         "goblin_patch"
       ],
-      "equippedItems": [],
+      "equippedItems": [
+        "iron_blade"
+      ],
       "inventoryItems": [
         "leather_helmet"
       ],
@@ -1344,7 +1346,9 @@
         "pounce",
         "cocoon_rest"
       ],
-      "equippedItems": [],
+      "equippedItems": [
+        "cracked_totem"
+      ],
       "inventoryItems": [
         "field_tonic"
       ],
@@ -1375,7 +1379,9 @@
         "mana_drain",
         "dark_mend"
       ],
-      "equippedItems": [],
+      "equippedItems": [
+        "mana_relic"
+      ],
       "inventoryItems": [
         "priest_charm"
       ],
@@ -1406,9 +1412,11 @@
         "poison",
         "witch_brew"
       ],
-      "equippedItems": [],
-      "inventoryItems": [
+      "equippedItems": [
         "witch_lantern"
+      ],
+      "inventoryItems": [
+        "mana_relic"
       ],
       "learnableMoves": [
         "shadow_bolt",
