@@ -2,6 +2,8 @@
 
 Small Fastify server for The Tower game. It serves run data from `src/engine/config.json` and picks monster moves during battle.
 
+> **Note:** This server is deprecated. Starting from **The Tower v1.0.2**, the game no longer uses a separate server. All required game logic and configuration were moved client-side so the game can run more easily on the web without extra server setup.
+
 ## What this README covers
 
 - how to install and start the server
